@@ -1,0 +1,34 @@
+federated-ml/
+│
+├── main_server/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── routes.py
+│   │   ├── views/
+│   │   │   └── model_view.py
+│   │   ├── core/
+│   │   │   └── config.py
+│   │   ├── services/
+│   │   │   ├── training.py
+│   │   │   ├── aggregation.py
+│   │   ├── models/
+│   │   │   └── model.pkl
+│   │   └── main.py
+│
+├── hospital_1/
+│   ├── app/
+│   │   ├── api/routes.py
+│   │   ├── views/model_view.py
+│   │   ├── services/training.py
+│   │   ├── models/
+│   │   └── main.py
+│
+├── hospital_2/
+│   ├── app/
+│   │   ├── api/routes.py
+│   │   ├── views/model_view.py
+│   │   ├── services/training.py
+│   │   ├── models/
+│   │   └── main.py
+
+
