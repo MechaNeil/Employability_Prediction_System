@@ -187,6 +187,8 @@ During `GET /aggregate`, main server performs:
 - `GET /status` -> Combined runtime status (hospitals, model artifacts, metrics)
 - `GET /model-version` -> Metadata for base/global model files
 - `POST /train` -> Train initial main model on Set-1
+- `POST /deploy` -> Simulate deployment of latest central model to hospitals
+- `POST /retrain-hospitals` -> Trigger retraining on both hospitals
 - `GET /aggregate` -> Trigger federated retrain + model aggregation
 - `GET /evaluate` -> Evaluate current global model
 - `POST /predict` -> Predict employability for provided records

@@ -91,3 +91,17 @@ def aggregate_pipeline() -> dict[str, object]:
         "global_model_path": output_path,
         "metrics": metrics,
     }
+
+
+def retrain_hospitals() -> dict[str, str]:
+    _post_with_retry(HOSPITAL_1_RETRAIN_URL)
+    _post_with_retry(HOSPITAL_2_RETRAIN_URL)
+    return {"message": "Hospital retraining completed for H1 and H2."}
+
+
+def deploy_to_hospitals() -> dict[str, str]:
+    if not BASE_MODEL_PATH.exists():
+        raise FileNotFoundError("Main model missing. Train main model first.")
+    return {
+        "message": "Deployment simulation complete. Hospitals pull the latest central model on retraining.",
+    }
