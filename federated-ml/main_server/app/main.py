@@ -55,58 +55,58 @@ def dashboard_placeholder() -> str:
 
           .topbar {
             color: #fff;
-            padding: 20px 24px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
           }
 
           .title {
             margin: 0;
             font-family: "Sora", "Manrope", sans-serif;
-            font-size: 48px;
-            line-height: 0.95;
+            font-size: 40px;
+            line-height: 1;
             letter-spacing: 0.2px;
           }
 
           .subtitle {
-            margin: 4px 0 0;
+            margin: 6px 0 0;
             opacity: 0.95;
-            font-size: 16px;
+            font-size: 15px;
           }
 
           .online {
             border-radius: 999px;
-            padding: 10px 16px;
+            padding: 9px 14px;
             border: 1px solid rgba(27, 198, 131, 0.5);
             background: rgba(27, 198, 131, 0.2);
             color: #aef4d6;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
           }
 
           .layout {
-            padding: 0 14px 14px;
+            padding: 0 12px 12px;
             display: grid;
             grid-template-columns: 240px 1fr;
-            gap: 14px;
+            gap: 12px;
             min-height: calc(100vh - 94px);
           }
 
           .sidebar {
             background: linear-gradient(180deg, var(--nav-1), var(--nav-2));
             border-radius: 16px;
-            padding: 16px 12px;
+            padding: 14px 10px;
             color: #dce5ff;
             box-shadow: var(--shadow);
           }
 
           .group-title {
-            margin: 10px 10px 8px;
+            margin: 12px 10px 8px;
             font-size: 12px;
             color: #9ab0df;
             text-transform: uppercase;
@@ -117,11 +117,11 @@ def dashboard_placeholder() -> str:
           .nav-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 11px 12px;
+            gap: 12px;
+            padding: 10px 12px;
             border-radius: 10px;
             margin-bottom: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             background: rgba(255, 255, 255, 0.04);
           }
@@ -145,20 +145,20 @@ def dashboard_placeholder() -> str:
           .main {
             background: var(--surface);
             border-radius: 16px;
-            padding: 14px;
+            padding: 12px;
             box-shadow: var(--shadow);
           }
 
           .cards {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
+            gap: 8px;
           }
 
           .card {
             background: var(--card);
             border-radius: 14px;
-            padding: 14px;
+            padding: 12px 13px;
             box-shadow: var(--shadow);
             animation: lift 0.45s ease forwards;
             transform: translateY(8px);
@@ -169,13 +169,13 @@ def dashboard_placeholder() -> str:
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            gap: 10px;
           }
 
           .model-id {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
           }
 
           .model-icon {
@@ -197,25 +197,25 @@ def dashboard_placeholder() -> str:
 
           .model-name {
             margin: 0;
-            font-size: 17px;
+            font-size: 16px;
             line-height: 1.1;
           }
 
           .model-sub {
-            margin: 2px 0 0;
-            font-size: 13px;
+            margin: 4px 0 0;
+            font-size: 12px;
             color: var(--muted);
           }
 
           .state {
             border-radius: 999px;
-            padding: 3px 8px;
+            padding: 4px 9px;
             font-size: 12px;
             font-weight: 700;
             color: #fff;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
           }
 
           .state.online { background: #16a36d; }
@@ -223,9 +223,10 @@ def dashboard_placeholder() -> str:
           .state.updated { background: #6a79ff; }
 
           .metric {
-            margin-top: 10px;
-            font-size: 38px;
+            margin-top: 11px;
+            font-size: 34px;
             font-weight: 700;
+            line-height: 1;
           }
 
           .metric.blue { color: var(--blue); }
@@ -235,15 +236,15 @@ def dashboard_placeholder() -> str:
 
           .tag {
             display: inline-block;
-            margin-top: 3px;
+            margin-top: 7px;
             font-size: 12px;
             font-weight: 700;
             border-radius: 999px;
-            padding: 4px 9px;
+            padding: 5px 10px;
             color: #fff;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
           }
 
           .tag.good { background: #16a36d; }
@@ -253,14 +254,15 @@ def dashboard_placeholder() -> str:
             background: #fff;
             border-radius: 14px;
             box-shadow: var(--shadow);
-            padding: 14px;
+            padding: 13px;
           }
 
           .actions {
             margin-top: 12px;
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
+            gap: 9px;
+            align-items: stretch;
           }
 
           .action {
@@ -268,16 +270,21 @@ def dashboard_placeholder() -> str:
             border-radius: 12px;
             color: #fff;
             text-align: left;
-            padding: 12px;
+            padding: 12px 14px;
+            min-height: 78px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
             cursor: pointer;
             transition: transform 0.12s ease, filter 0.12s ease;
           }
 
           .action:hover { transform: translateY(-1px); filter: brightness(1.05); }
           .action:disabled { opacity: 0.8; cursor: wait; }
-          .action-title { font-size: 16px; font-weight: 700; }
-          .action-sub { margin-top: 2px; font-size: 12px; opacity: 0.92; }
-          .action-title i { margin-right: 7px; }
+          .action-title { font-size: 15px; font-weight: 700; line-height: 1.25; }
+          .action-sub { margin-top: 2px; font-size: 12px; opacity: 0.92; line-height: 1.25; }
+          .action-title i { margin-right: 10px; }
 
           .a1 { background: linear-gradient(90deg, #2f66ff, #2658dd); }
           .a2 { background: linear-gradient(90deg, #14a263, #0f8250); }
@@ -289,12 +296,12 @@ def dashboard_placeholder() -> str:
             margin-top: 12px;
             display: grid;
             grid-template-columns: 1.6fr 1fr;
-            gap: 12px;
+            gap: 10px;
           }
 
           .panel-title {
-            margin: 0 0 10px;
-            font-size: 20px;
+            margin: 0 0 12px;
+            font-size: 18px;
           }
 
           .chart {
@@ -302,8 +309,8 @@ def dashboard_placeholder() -> str:
             grid-template-columns: repeat(4, minmax(0, 1fr));
             align-items: end;
             gap: 10px;
-            min-height: 250px;
-            padding: 8px;
+            min-height: 230px;
+            padding: 10px 9px;
             border: 1px solid var(--line);
             border-radius: 12px;
             background: linear-gradient(180deg, #fafcff, #f2f6ff);
@@ -346,12 +353,12 @@ def dashboard_placeholder() -> str:
           .timeline {
             border-left: 2px solid #d8e3f7;
             margin-left: 8px;
-            padding-left: 14px;
+            padding-left: 15px;
           }
 
           .step {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
           }
 
           .step::before {
@@ -369,17 +376,17 @@ def dashboard_placeholder() -> str:
           .step.bad::before { background: #ea5757; }
 
           .step-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #223154;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 9px;
           }
 
           .step-sub {
-            margin-top: 1px;
-            font-size: 13px;
+            margin-top: 3px;
+            font-size: 12px;
             color: #66748f;
           }
 
@@ -388,20 +395,20 @@ def dashboard_placeholder() -> str:
             background: #0f182d;
             color: #d9e9ff;
             border-radius: 12px;
-            padding: 10px;
-            font: 12px/1.4 Consolas, monospace;
-            height: 154px;
+            padding: 11px;
+            font: 12px/1.45 Consolas, monospace;
+            height: 148px;
             overflow: auto;
           }
 
           .footer {
             margin-top: 10px;
-            font-size: 13px;
+            font-size: 12px;
             color: #6f7d96;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 8px;
           }
 
           @keyframes lift {
@@ -434,6 +441,7 @@ def dashboard_placeholder() -> str:
             .metric { font-size: 32px; }
             .nav-item { font-size: 16px; }
             .online { padding: 8px 12px; }
+            .action { min-height: 74px; }
           }
         </style>
       </head>
@@ -670,8 +678,8 @@ def dashboard_placeholder() -> str:
               document.getElementById('globalAcc').textContent = globalPct ? `${globalPct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
-              setTag('h1Tag', h1 ? 'Online' : 'Offline', h1);
-              setTag('h2Tag', h2 ? 'Online' : 'Offline', h2);
+              setTag('h1Tag', h1Pct ? 'Updated' : 'Outdated', Boolean(h1Pct));
+              setTag('h2Tag', h2Pct ? 'Updated' : 'Outdated', Boolean(h2Pct));
               setTag('globalTag', globalReady ? 'Aggregated' : 'Pending', globalReady);
 
               setState('h1State', h1 ? 'online' : 'offline', h1 ? 'online' : 'wait');
