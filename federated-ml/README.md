@@ -52,6 +52,9 @@ curl http://localhost:8000/evaluate
 - GET /aggregate
 - GET /evaluate
 - GET /health
+- GET /status
+- GET /model-version
+- POST /predict
 
 ## Hospital Endpoints
 - POST /retrain
