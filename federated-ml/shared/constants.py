@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_DATASET = PROJECT_ROOT.parent / "Student-Employability-Datasets.csv"
+SOURCE_DATASET = PROJECT_ROOT / "Student-Employability-Datasets.csv"
 SPLIT_DIR = PROJECT_ROOT / "dataset"
 
 NAME_COLUMN = "Name of Student"

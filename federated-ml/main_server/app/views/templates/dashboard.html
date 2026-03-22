@@ -264,6 +264,72 @@
             align-items: stretch;
           }
 
+          .action-sections {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 10px;
+          }
+
+          .action-section {
+            border: 1px solid #d8e2f6;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fbfdff, #f4f8ff);
+            padding: 10px;
+          }
+
+          .action-section.train {
+            border-color: #ccdaf8;
+            background: linear-gradient(180deg, #f8fbff, #edf4ff);
+          }
+
+          .action-section.retrain {
+            border-color: #d3dbf1;
+            background: linear-gradient(180deg, #fbfdff, #f3f6fd);
+          }
+
+          .action-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+          }
+
+          .action-section-title {
+            margin: 0;
+            font-size: 15px;
+            color: #1f345f;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .action-section-sub {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: #607097;
+          }
+
+          .train-controls {
+            grid-template-columns: 1fr;
+          }
+
+          .train-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .retrain-controls {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
+          .control-block.wide {
+            grid-column: span 2;
+          }
+
+          .retrain-actions {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+
           .control-row {
             margin-top: 10px;
             display: grid;
@@ -671,6 +737,7 @@
           @media (max-width: 1260px) {
             .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .action-sections { grid-template-columns: 1fr; }
           }
 
           @media (max-width: 980px) {
@@ -680,6 +747,11 @@
             .row { grid-template-columns: 1fr; }
             .eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .control-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .train-controls,
+            .retrain-controls,
+            .train-actions,
+            .retrain-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .control-block.wide { grid-column: span 2; }
             .version-compare-grid { grid-template-columns: 1fr; }
           }
 
@@ -691,6 +763,11 @@
             .cards { grid-template-columns: 1fr; }
             .actions { grid-template-columns: 1fr; }
             .control-row { grid-template-columns: 1fr; }
+            .train-controls,
+            .retrain-controls,
+            .train-actions,
+            .retrain-actions { grid-template-columns: 1fr; }
+            .control-block.wide { grid-column: auto; }
             .chart { min-height: 220px; }
             .metric { font-size: 32px; }
             .nav-item { font-size: 16px; }
@@ -794,53 +871,76 @@
 
             <section class="panel" style="margin-top:12px">
               <h3 class="panel-title">Action Controls</h3>
-              <div class="control-row">
-                <div class="control-block">
-                  <label class="control-label" for="trainDataset">Main Train Dataset</label>
-                  <select id="trainDataset" class="control-input">
-                    <option value="set1">Set-1</option>
-                    <option value="set2">Set-2</option>
-                    <option value="set3">Set-3</option>
-                  </select>
-                </div>
-                <div class="control-block">
-                  <label class="control-label" for="retrainDataset">Retrain Dataset</label>
-                  <select id="retrainDataset" class="control-input">
-                    <option value="set1">Set-1</option>
-                    <option value="set2" selected>Set-2</option>
-                    <option value="set3">Set-3</option>
-                  </select>
-                </div>
-                <div class="control-block" style="grid-column: span 2;">
-                  <label class="control-label">Retrain Targets</label>
-                  <div class="check-grid">
-                    <label><input type="checkbox" class="retrain-target" value="main" /> Main</label>
-                    <label><input type="checkbox" class="retrain-target" value="hospital_1" checked /> Hospital-1</label>
-                    <label><input type="checkbox" class="retrain-target" value="hospital_2" checked /> Hospital-2</label>
+              <div class="action-sections">
+                <article class="action-section train">
+                  <div class="action-section-head">
+                    <div>
+                      <h4 class="action-section-title"><i class="fa-solid fa-brain"></i>Main Model Flow</h4>
+                      <p class="action-section-sub">Train and distribute the latest central model.</p>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div class="actions">
-                <button class="action a1" id="btnTrain" onclick="runAction('train')">
-                  <div class="action-title"><i class="fa-solid fa-play"></i>Train Main Model</div>
-                  <div class="action-sub">Use selected main dataset</div>
-                </button>
-                <button class="action a2" id="btnDeploy" onclick="runAction('deploy')">
-                  <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Deploy to Hospitals</div>
-                  <div class="action-sub">Send latest central model</div>
-                </button>
-                <button class="action a3" id="btnRetrain" onclick="runAction('retrain-hospitals')">
-                  <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining</div>
-                  <div class="action-sub">Run selected targets and dataset</div>
-                </button>
-                <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
-                  <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
-                  <div class="action-sub">Build next global model version</div>
-                </button>
-                <button class="action a5" id="btnEvaluate" onclick="runAction('evaluate')">
-                  <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Global</div>
-                  <div class="action-sub">Test on holdout set</div>
-                </button>
+                  <div class="control-row train-controls">
+                    <div class="control-block">
+                      <label class="control-label" for="trainDataset">Main Train Dataset</label>
+                      <select id="trainDataset" class="control-input">
+                        <option value="set1">Set-1</option>
+                        <option value="set2">Set-2</option>
+                        <option value="set3">Set-3</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="actions train-actions">
+                    <button class="action a1" id="btnTrain" onclick="runAction('train')">
+                      <div class="action-title"><i class="fa-solid fa-play"></i>Train Main Model</div>
+                      <div class="action-sub">Use selected main dataset</div>
+                    </button>
+                    <button class="action a2" id="btnDeploy" onclick="runAction('deploy')">
+                      <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Deploy to Hospitals</div>
+                      <div class="action-sub">Send latest central model</div>
+                    </button>
+                  </div>
+                </article>
+
+                <article class="action-section retrain">
+                  <div class="action-section-head">
+                    <div>
+                      <h4 class="action-section-title"><i class="fa-solid fa-arrows-rotate"></i>Retrain And Consolidate</h4>
+                      <p class="action-section-sub">Run local retraining, aggregate updates, and evaluate global quality.</p>
+                    </div>
+                  </div>
+                  <div class="control-row retrain-controls">
+                    <div class="control-block">
+                      <label class="control-label" for="retrainDataset">Retrain Dataset</label>
+                      <select id="retrainDataset" class="control-input">
+                        <option value="set1">Set-1</option>
+                        <option value="set2" selected>Set-2</option>
+                        <option value="set3">Set-3</option>
+                      </select>
+                    </div>
+                    <div class="control-block wide">
+                      <label class="control-label">Retrain Targets</label>
+                      <div class="check-grid">
+                        <label><input type="checkbox" class="retrain-target" value="main" /> Main</label>
+                        <label><input type="checkbox" class="retrain-target" value="hospital_1" checked /> Hospital-1</label>
+                        <label><input type="checkbox" class="retrain-target" value="hospital_2" checked /> Hospital-2</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="actions retrain-actions">
+                    <button class="action a3" id="btnRetrain" onclick="runAction('retrain-hospitals')">
+                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining</div>
+                      <div class="action-sub">Run selected targets and dataset</div>
+                    </button>
+                    <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
+                      <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
+                      <div class="action-sub">Build next global model version</div>
+                    </button>
+                    <button class="action a5" id="btnEvaluate" onclick="runAction('evaluate')">
+                      <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Global</div>
+                      <div class="action-sub">Test on holdout set</div>
+                    </button>
+                  </div>
+                </article>
               </div>
             </section>
 
