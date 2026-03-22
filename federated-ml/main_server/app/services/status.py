@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import joblib
 import pandas as pd
@@ -21,7 +22,9 @@ from main_server.app.core.config import (
     HOSPITAL_2_MODEL_URL,
 )
 from main_server.app.services.evaluation import evaluate_global_model
+from main_server.app.services.model_registry import get_registry_overview
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN, TEST_FILE
+from shared.datasets import get_dataset_path, normalize_dataset_key
 
 
 def _model_info(path: Path) -> dict[str, object]:
@@ -62,6 +65,7 @@ def get_model_versions() -> dict[str, object]:
     return {
         "base_model": _model_info(BASE_MODEL_PATH),
         "global_model": _model_info(GLOBAL_MODEL_PATH),
+        "registry": get_registry_overview(),
     }
 
 
@@ -82,6 +86,23 @@ def _safe_metric_bundle(model) -> dict[str, float] | None:
 
     try:
         df = pd.read_csv(TEST_FILE)
+        x = df[FEATURE_COLUMNS]
+        y = df[TARGET_COLUMN]
+        preds = model.predict(x)
+        return {
+            "accuracy": float(accuracy_score(y, preds)),
+            "precision": float(precision_score(y, preds, zero_division=0)),
+            "recall": float(recall_score(y, preds, zero_division=0)),
+            "f1": float(f1_score(y, preds, zero_division=0)),
+        }
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _metric_bundle_for_dataset(model, dataset_key: str) -> dict[str, float] | None:
+    try:
+        dataset_path = get_dataset_path(dataset_key)
+        df = pd.read_csv(dataset_path)
         x = df[FEATURE_COLUMNS]
         y = df[TARGET_COLUMN]
         preds = model.predict(x)
@@ -163,4 +184,66 @@ def get_system_status() -> dict[str, object]:
         "metrics": metrics,
         "comparison": comparison,
         "model_metrics": model_metrics,
+    }
+
+
+def compare_named_versions(test_dataset: str, items: list[dict[str, str]]) -> dict[str, object]:
+    dataset_key = normalize_dataset_key(test_dataset)
+    registry = get_registry_overview()
+    results: list[dict[str, Any]] = []
+
+    for item in items:
+        label = item.get("label", "")
+        model_family = item.get("model_family", "")
+        version_name = item.get("version_name", "")
+
+        family = registry.get(model_family)
+        versions = family.get("versions", []) if isinstance(family, dict) else []
+
+        selected = None
+        for version in versions:
+            if version.get("version_name") == version_name:
+                selected = version
+                break
+
+        if selected is None:
+            results.append(
+                {
+                    "label": label or version_name,
+                    "model_family": model_family,
+                    "version_name": version_name,
+                    "metrics": None,
+                    "error": "Version not found in registry.",
+                }
+            )
+            continue
+
+        model_path = Path(str(selected.get("path", "")))
+        if not model_path.exists():
+            results.append(
+                {
+                    "label": label or version_name,
+                    "model_family": model_family,
+                    "version_name": version_name,
+                    "metrics": None,
+                    "error": f"Model artifact missing: {model_path}",
+                }
+            )
+            continue
+
+        model = joblib.load(model_path)
+        metrics = _metric_bundle_for_dataset(model, dataset_key)
+        results.append(
+            {
+                "label": label or version_name,
+                "model_family": model_family,
+                "version_name": version_name,
+                "metrics": metrics,
+                "error": None if metrics is not None else "Evaluation failed.",
+            }
+        )
+
+    return {
+        "test_dataset": dataset_key,
+        "results": results,
     }

@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 
 from main_server.app.core.config import GLOBAL_MODEL_PATH
+from main_server.app.services.model_registry import bootstrap_registry, register_global_model
 
 
 class MajorityVoteEnsemble:
@@ -28,6 +29,11 @@ class MajorityVoteEnsemble:
 
 
 def aggregate_models(models: list[object]) -> str:
+    bootstrap_registry()
     ensemble_model = MajorityVoteEnsemble(models)
     joblib.dump(ensemble_model, GLOBAL_MODEL_PATH)
+    register_global_model(
+        GLOBAL_MODEL_PATH,
+        metadata={"mode": "aggregate_vote", "members": len(models)},
+    )
     return str(GLOBAL_MODEL_PATH)

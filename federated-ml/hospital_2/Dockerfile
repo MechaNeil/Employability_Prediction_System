@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r /workspace/requirements.txt
 
 COPY . /workspace
 
-CMD ["sh", "-c", "python -m hospital_2.app.services.training && uvicorn hospital_2.app.main:app --host 0.0.0.0 --port 8002"]
+CMD ["uvicorn", "hospital_2.app.main:app", "--host", "0.0.0.0", "--port", "8002"]

@@ -1,0 +1,253 @@
+<html>
+  <head>
+    <title>Hospital-2 Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #27133f;
+        --bg2: #4a2a7d;
+        --panel: #ffffff;
+        --ink: #1f2d38;
+        --line: #d8e2ee;
+        --violet: #7a39d8;
+        --blue: #2f66ff;
+        --orange: #f2871f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(130deg, var(--bg), var(--bg2));
+        color: #fff;
+      }
+      .wrap { max-width: 1200px; margin: 0 auto; padding: 18px; }
+      .title { margin: 0; font-size: 34px; }
+      .sub { margin: 6px 0 14px; opacity: 0.9; }
+      .grid { display: grid; gap: 12px; grid-template-columns: 1.2fr 1fr; }
+      .panel {
+        background: var(--panel);
+        color: var(--ink);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+      }
+      .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      button, select {
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        padding: 10px;
+        font-size: 14px;
+      }
+      button { cursor: pointer; font-weight: 700; }
+      button.primary { background: var(--blue); color: #fff; border: 0; }
+      button.good { background: var(--violet); color: #fff; border: 0; }
+      button.warn { background: var(--orange); color: #fff; border: 0; }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+      .m {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #f7fbff;
+      }
+      .m h4 { margin: 0; font-size: 12px; color: #4f607b; }
+      .m div { margin-top: 6px; font-size: 22px; font-weight: 800; }
+      .log {
+        margin-top: 10px;
+        height: 180px;
+        overflow: auto;
+        font: 12px/1.45 Consolas, monospace;
+        background: #101723;
+        color: #d9e7ff;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .stack { display: grid; gap: 8px; }
+      @media (max-width: 980px) {
+        .grid { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1 class="title">Hospital-2 Local Dashboard</h1>
+      <p class="sub">Train/retrain with Set-1, Set-2, Set-3. Compare training-set model performance with selectable test dataset.</p>
+
+      <div class="grid">
+        <section class="panel stack">
+          <h3 style="margin:0">Actions</h3>
+          <div class="row">
+            <select id="trainDataset">
+              <option value="set1">Set 1</option>
+              <option value="set2">Set 2</option>
+              <option value="set3" selected>Set 3</option>
+            </select>
+            <select id="testDataset">
+              <option value="set1">Test: Set 1</option>
+              <option value="set2">Test: Set 2</option>
+              <option value="set3">Test: Set 3</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="primary" onclick="train(false)">Train Model</button>
+            <button class="warn" onclick="train(true)">Retrain From Main</button>
+          </div>
+          <div class="row">
+            <button class="good" onclick="evaluateActive()">Evaluate Active</button>
+            <button onclick="deployToMain()">Deploy Model to Main</button>
+          </div>
+          <div class="row">
+            <button onclick="downloadModel()">Download Active Model</button>
+            <input id="uploadInput" type="file" />
+          </div>
+          <button onclick="uploadModel()">Upload Model Version</button>
+
+          <div class="metrics">
+            <div class="m"><h4>Accuracy</h4><div id="acc">-</div></div>
+            <div class="m"><h4>Precision</h4><div id="pre">-</div></div>
+            <div class="m"><h4>Recall</h4><div id="rec">-</div></div>
+            <div class="m"><h4>F1</h4><div id="f1">-</div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3 style="margin:0 0 8px">Evaluation by Training Set</h3>
+          <canvas id="comparisonChart"></canvas>
+          <p id="activeVersion" style="margin:8px 0 0;color:#5f6f8b">Active model: -</p>
+        </section>
+      </div>
+
+      <section class="panel" style="margin-top:12px">
+        <h3 style="margin:0">Activity</h3>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
+
+    <script>
+      let chart = null;
+      const logEl = document.getElementById('log');
+
+      function log(message) {
+        const stamp = new Date().toLocaleTimeString();
+        logEl.innerHTML = `[${stamp}] ${message}<br>` + logEl.innerHTML;
+      }
+
+      function pct(value) {
+        return value === null || value === undefined ? '-' : `${(value * 100).toFixed(1)}%`;
+      }
+
+      function endpoint(method, path, body) {
+        return fetch(path, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        }).then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+          return data;
+        });
+      }
+
+      async function train(retrainFromMain) {
+        const dataset = document.getElementById('trainDataset').value;
+        const action = retrainFromMain ? 'retrain' : 'train';
+        const result = await endpoint('POST', `/${action}`, { dataset, retrain_from_main: retrainFromMain });
+        log(`${action.toUpperCase()} ok: ${result.active_version}`);
+        await refreshStatus();
+        await refreshTrainingSetChart();
+      }
+
+      async function evaluateActive() {
+        const testDataset = document.getElementById('testDataset').value;
+        const result = await endpoint('POST', '/evaluate', { test_dataset: testDataset });
+        document.getElementById('acc').textContent = pct(result.accuracy);
+        document.getElementById('pre').textContent = pct(result.precision);
+        document.getElementById('rec').textContent = pct(result.recall);
+        document.getElementById('f1').textContent = pct(result.f1);
+        log(`EVALUATE ok on ${testDataset}: ${pct(result.accuracy)}`);
+      }
+
+      async function refreshStatus() {
+        const status = await endpoint('GET', '/status');
+        const active = status.active_model?.version_name || 'none';
+        document.getElementById('activeVersion').textContent = `Active model: ${active}`;
+      }
+
+      async function refreshTrainingSetChart() {
+        const testDataset = document.getElementById('testDataset').value;
+        const payload = await endpoint('GET', `/compare-by-training-set?test_dataset=${testDataset}`);
+        const source = payload.comparison || {};
+        const labels = ['Set 1', 'Set 2', 'Set 3'];
+        const data = ['set1', 'set2', 'set3'].map((key) => {
+          const node = source[key];
+          return node ? (node.metrics.accuracy * 100) : null;
+        });
+
+        const ctx = document.getElementById('comparisonChart');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: `Accuracy on ${testDataset.toUpperCase()}`,
+              data,
+              backgroundColor: ['#2f66ff', '#7a39d8', '#f2871f'],
+            }],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                suggestedMax: 100,
+                ticks: { callback: (v) => `${v}%` },
+              },
+            },
+          },
+        });
+
+        log(`Comparison chart refreshed with test dataset ${testDataset}.`);
+      }
+
+      async function deployToMain() {
+        const result = await endpoint('POST', '/deploy-to-main', {});
+        log(`DEPLOY ok: ${JSON.stringify(result.main_server_response)}`);
+      }
+
+      function downloadModel() {
+        window.open('/model', '_blank');
+      }
+
+      async function uploadModel() {
+        const input = document.getElementById('uploadInput');
+        if (!input.files.length) {
+          log('UPLOAD skipped: choose a file first.');
+          return;
+        }
+
+        const form = new FormData();
+        form.append('model_file', input.files[0]);
+        const response = await fetch('/model/upload', { method: 'POST', body: form });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || JSON.stringify(data));
+        log(`UPLOAD ok: ${data.active_version}`);
+        await refreshStatus();
+        await refreshTrainingSetChart();
+      }
+
+      document.getElementById('testDataset').addEventListener('change', async () => {
+        await evaluateActive();
+        await refreshTrainingSetChart();
+      });
+
+      (async () => {
+        log('Hospital-2 dashboard initialized.');
+        await refreshStatus();
+        await evaluateActive();
+        await refreshTrainingSetChart();
+      })();
+    </script>
+  </body>
+</html>

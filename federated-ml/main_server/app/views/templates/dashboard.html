@@ -264,6 +264,54 @@
             align-items: stretch;
           }
 
+          .control-row {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .control-block {
+            background: #f7f9ff;
+            border: 1px solid #d8e2f6;
+            border-radius: 10px;
+            padding: 8px;
+          }
+
+          .control-label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #2a3f69;
+          }
+
+          .control-input {
+            width: 100%;
+            border: 1px solid #bfd0ef;
+            border-radius: 8px;
+            background: #fff;
+            color: #1f3159;
+            padding: 7px 8px;
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          .check-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+
+          .check-grid label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2d3e62;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+          }
+
           .action {
             border: 0;
             border-radius: 12px;
@@ -515,6 +563,41 @@
             gap: 8px;
           }
 
+          .version-compare-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .compare-slot {
+            border: 1px solid #d8e2f6;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 10px;
+          }
+
+          .compare-slot h4 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #21345f;
+          }
+
+          .compare-canvas-wrap {
+            margin-top: 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fcfdff, #f5f8ff);
+            padding: 10px;
+            min-height: 280px;
+          }
+
+          .compare-result {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #5e6c88;
+          }
+
           .eval-card {
             border: 1px solid #d8e2f6;
             border-radius: 10px;
@@ -596,6 +679,8 @@
             .title { font-size: 36px; }
             .row { grid-template-columns: 1fr; }
             .eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .control-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .version-compare-grid { grid-template-columns: 1fr; }
           }
 
           @media (max-width: 680px) {
@@ -605,6 +690,7 @@
             .main { padding: 10px; }
             .cards { grid-template-columns: 1fr; }
             .actions { grid-template-columns: 1fr; }
+            .control-row { grid-template-columns: 1fr; }
             .chart { min-height: 220px; }
             .metric { font-size: 32px; }
             .nav-item { font-size: 16px; }
@@ -708,10 +794,36 @@
 
             <section class="panel" style="margin-top:12px">
               <h3 class="panel-title">Action Controls</h3>
+              <div class="control-row">
+                <div class="control-block">
+                  <label class="control-label" for="trainDataset">Main Train Dataset</label>
+                  <select id="trainDataset" class="control-input">
+                    <option value="set1">Set-1</option>
+                    <option value="set2">Set-2</option>
+                    <option value="set3">Set-3</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <label class="control-label" for="retrainDataset">Retrain Dataset</label>
+                  <select id="retrainDataset" class="control-input">
+                    <option value="set1">Set-1</option>
+                    <option value="set2" selected>Set-2</option>
+                    <option value="set3">Set-3</option>
+                  </select>
+                </div>
+                <div class="control-block" style="grid-column: span 2;">
+                  <label class="control-label">Retrain Targets</label>
+                  <div class="check-grid">
+                    <label><input type="checkbox" class="retrain-target" value="main" /> Main</label>
+                    <label><input type="checkbox" class="retrain-target" value="hospital_1" checked /> Hospital-1</label>
+                    <label><input type="checkbox" class="retrain-target" value="hospital_2" checked /> Hospital-2</label>
+                  </div>
+                </div>
+              </div>
               <div class="actions">
                 <button class="action a1" id="btnTrain" onclick="runAction('train')">
                   <div class="action-title"><i class="fa-solid fa-play"></i>Train Main Model</div>
-                  <div class="action-sub">Using Set-1</div>
+                  <div class="action-sub">Use selected main dataset</div>
                 </button>
                 <button class="action a2" id="btnDeploy" onclick="runAction('deploy')">
                   <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Deploy to Hospitals</div>
@@ -719,11 +831,11 @@
                 </button>
                 <button class="action a3" id="btnRetrain" onclick="runAction('retrain-hospitals')">
                   <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining</div>
-                  <div class="action-sub">H1: Set-2 | H2: Set-3</div>
+                  <div class="action-sub">Run selected targets and dataset</div>
                 </button>
                 <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
                   <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
-                  <div class="action-sub">Create Global v2</div>
+                  <div class="action-sub">Build next global model version</div>
                 </button>
                 <button class="action a5" id="btnEvaluate" onclick="runAction('evaluate')">
                   <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Global</div>
@@ -786,6 +898,100 @@
             <div id="activityLog" class="log"></div>
             </section>
 
+            <section class="panel" style="margin-top:12px">
+              <h3 class="panel-title">Manual Upload Forward</h3>
+              <div class="control-row">
+                <div class="control-block">
+                  <label class="control-label" for="uploadSource">Source Server</label>
+                  <select id="uploadSource" class="control-input">
+                    <option value="main" selected>Main</option>
+                    <option value="hospital_1">Hospital-1</option>
+                    <option value="hospital_2">Hospital-2</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <label class="control-label" for="uploadTarget">Update Target</label>
+                  <select id="uploadTarget" class="control-input">
+                    <option value="main" selected>Main</option>
+                    <option value="hospital_1">Hospital-1</option>
+                    <option value="hospital_2">Hospital-2</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <label class="control-label" for="uploadFamily">Model Family</label>
+                  <select id="uploadFamily" class="control-input">
+                    <option value="main_model" selected>Main Model</option>
+                    <option value="global_model">Global Model</option>
+                    <option value="hospital_1_model">Hospital-1 Model</option>
+                    <option value="hospital_2_model">Hospital-2 Model</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <label class="control-label" for="uploadFile">Model File (.pkl)</label>
+                  <input id="uploadFile" class="control-input" type="file" accept=".pkl" />
+                </div>
+              </div>
+              <div class="actions" style="grid-template-columns: 1fr; margin-top:10px;">
+                <button class="action a4" id="btnUploadForward" onclick="uploadAndForwardModel()">
+                  <div class="action-title"><i class="fa-solid fa-upload"></i>Upload And Forward</div>
+                  <div class="action-sub">Store in main registry and optionally push to selected target</div>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel" style="margin-top:12px">
+              <div class="eval-head">
+                <h3 class="panel-title" style="margin-bottom:0">Version Comparison</h3>
+                <div class="eval-controls">
+                  <select id="compareDataset" class="control-input" style="min-width:110px;">
+                    <option value="set1">Test Set-1</option>
+                    <option value="set2">Test Set-2</option>
+                    <option value="set3">Test Set-3</option>
+                  </select>
+                  <button class="eval-btn" id="btnCompareVersions" onclick="runVersionComparison()"><i class="fa-solid fa-code-compare"></i> Compare Versions</button>
+                </div>
+              </div>
+              <div class="version-compare-grid">
+                <div class="compare-slot">
+                  <h4>Candidate A</h4>
+                  <input id="cmpLabel1" class="control-input" value="Candidate A" />
+                  <select id="cmpFamily1" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(1)">
+                    <option value="main_model">Main Model</option>
+                    <option value="global_model">Global Model</option>
+                    <option value="hospital_1_model">Hospital-1 Model</option>
+                    <option value="hospital_2_model">Hospital-2 Model</option>
+                  </select>
+                  <select id="cmpVersion1" class="control-input" style="margin-top:6px;"></select>
+                </div>
+                <div class="compare-slot">
+                  <h4>Candidate B</h4>
+                  <input id="cmpLabel2" class="control-input" value="Candidate B" />
+                  <select id="cmpFamily2" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(2)">
+                    <option value="main_model">Main Model</option>
+                    <option value="global_model">Global Model</option>
+                    <option value="hospital_1_model">Hospital-1 Model</option>
+                    <option value="hospital_2_model">Hospital-2 Model</option>
+                  </select>
+                  <select id="cmpVersion2" class="control-input" style="margin-top:6px;"></select>
+                </div>
+                <div class="compare-slot">
+                  <h4>Candidate C</h4>
+                  <input id="cmpLabel3" class="control-input" value="Candidate C" />
+                  <select id="cmpFamily3" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(3)">
+                    <option value="main_model">Main Model</option>
+                    <option value="global_model">Global Model</option>
+                    <option value="hospital_1_model">Hospital-1 Model</option>
+                    <option value="hospital_2_model">Hospital-2 Model</option>
+                  </select>
+                  <select id="cmpVersion3" class="control-input" style="margin-top:6px;"></select>
+                </div>
+              </div>
+              <div class="compare-canvas-wrap">
+                <canvas id="versionCompareChart"></canvas>
+              </div>
+              <p id="compareResultText" class="compare-result">Select versions and run compare.</p>
+            </section>
+
             <div class="footer">
               <span>Federated Learning System | Central Server - FastAPI</span>
               <span id="lastUpdated">Last updated: -</span>
@@ -814,6 +1020,8 @@
           let evaluationMode = 'bar';
           let latestModelMetrics = null;
           let lastEvaluationSignature = null;
+          let versionCompareChart = null;
+          let cachedRegistry = null;
 
           function writeLog(message, kind = 'info') {
             const stamp = new Date().toLocaleTimeString();
@@ -834,6 +1042,27 @@
               exports: 'Export reports placeholder clicked.',
             };
             writeLog(titles[action] || `Placeholder clicked: ${action}`, 'warn');
+          }
+
+          function getSelectedRetrainTargets() {
+            const selected = Array.from(document.querySelectorAll('.retrain-target:checked')).map((node) => node.value);
+            if (selected.length === 0) {
+              return ['hospital_1', 'hospital_2'];
+            }
+            return selected;
+          }
+
+          function getActionPayload(action) {
+            if (action === 'train') {
+              return { dataset: document.getElementById('trainDataset').value };
+            }
+            if (action === 'retrain-hospitals') {
+              return {
+                dataset: document.getElementById('retrainDataset').value,
+                targets: getSelectedRetrainTargets(),
+              };
+            }
+            return null;
           }
 
           function setWorkflowState(text, kind, progress, detail, indeterminate = false) {
@@ -1090,7 +1319,7 @@
           }
 
           function setButtonsBusy(isBusy) {
-            ['btnTrain', 'btnDeploy', 'btnRetrain', 'btnAggregate', 'btnEvaluate'].forEach((id) => {
+            ['btnTrain', 'btnDeploy', 'btnRetrain', 'btnAggregate', 'btnEvaluate', 'btnUploadForward', 'btnCompareVersions'].forEach((id) => {
               const button = document.getElementById(id);
               if (button) {
                 button.disabled = isBusy;
@@ -1232,7 +1461,13 @@
               setWorkflowState('Workflow Processing', 'processing', 35, `${actionText(action)}...`, true);
               writeLog(`Action started: ${actionText(action)}.`, 'info');
               const endpoint = endpointFor(action);
-              const res = await fetch(endpoint.path, { method: endpoint.method });
+              const payload = getActionPayload(action);
+              const req = { method: endpoint.method };
+              if (payload) {
+                req.headers = { 'Content-Type': 'application/json' };
+                req.body = JSON.stringify(payload);
+              }
+              const res = await fetch(endpoint.path, req);
               const body = await res.json();
               if (!res.ok) {
                 throw new Error(body.detail || JSON.stringify(body));
@@ -1249,9 +1484,166 @@
             }
           }
 
+          async function refreshVersionRegistry() {
+            try {
+              const response = await fetch('/model-version');
+              const payload = await response.json();
+              if (!response.ok) {
+                throw new Error(payload.detail || 'Failed loading model versions.');
+              }
+              cachedRegistry = payload.registry || null;
+              [1, 2, 3].forEach((slot) => populateVersionSelect(slot));
+            } catch (error) {
+              writeLog(`Version registry refresh failed: ${error}`, 'warn');
+            }
+          }
+
+          function populateVersionSelect(slot) {
+            const family = document.getElementById(`cmpFamily${slot}`).value;
+            const versionSelect = document.getElementById(`cmpVersion${slot}`);
+            const versions = cachedRegistry?.[family]?.versions || [];
+            versionSelect.innerHTML = '';
+            versions.forEach((entry) => {
+              const option = document.createElement('option');
+              option.value = entry.version_name;
+              option.textContent = entry.version_name;
+              versionSelect.appendChild(option);
+            });
+            if (versions.length === 0) {
+              const option = document.createElement('option');
+              option.value = '';
+              option.textContent = 'No versions available';
+              versionSelect.appendChild(option);
+            }
+          }
+
+          async function uploadAndForwardModel() {
+            const input = document.getElementById('uploadFile');
+            const file = input.files && input.files[0];
+            if (!file) {
+              writeLog('Select a model file before upload.', 'warn');
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append('source_server', document.getElementById('uploadSource').value);
+            formData.append('target_server', document.getElementById('uploadTarget').value);
+            formData.append('model_family', document.getElementById('uploadFamily').value);
+            formData.append('model_file', file);
+
+            try {
+              isActionInFlight = true;
+              setButtonsBusy(true);
+              setWorkflowState('Workflow Processing', 'processing', 40, 'Uploading model and forwarding update...', true);
+              const response = await fetch('/remote-models/upload', { method: 'POST', body: formData });
+              const payload = await response.json();
+              if (!response.ok) {
+                throw new Error(payload.detail || JSON.stringify(payload));
+              }
+              writeLog(`UPLOAD success: ${JSON.stringify(payload)}`, 'success');
+              input.value = '';
+              await refreshStatus();
+              await refreshVersionRegistry();
+            } catch (error) {
+              writeLog(`UPLOAD failed: ${error}`, 'error');
+            } finally {
+              isActionInFlight = false;
+              setButtonsBusy(false);
+            }
+          }
+
+          function renderVersionComparisonChart(results) {
+            if (!window.Chart) return;
+            const canvas = document.getElementById('versionCompareChart');
+            if (!canvas) return;
+            if (versionCompareChart) {
+              versionCompareChart.destroy();
+            }
+
+            const labels = ['Accuracy', 'Precision', 'Recall', 'F1 Score'];
+            const palette = ['#2f66ff', '#10a86d', '#7a39d8'];
+            const datasets = results.map((item, idx) => ({
+              label: item.label,
+              data: [
+                (item.metrics?.accuracy || 0) * 100,
+                (item.metrics?.precision || 0) * 100,
+                (item.metrics?.recall || 0) * 100,
+                (item.metrics?.f1 || 0) * 100,
+              ],
+              borderColor: palette[idx % palette.length],
+              backgroundColor: `${palette[idx % palette.length]}33`,
+              borderWidth: 2,
+              borderRadius: 6,
+            }));
+
+            versionCompareChart = new Chart(canvas, {
+              type: 'bar',
+              data: { labels, datasets },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: (value) => `${value}%` },
+                  },
+                },
+              },
+            });
+          }
+
+          async function runVersionComparison() {
+            const items = [1, 2, 3]
+              .map((slot) => ({
+                label: document.getElementById(`cmpLabel${slot}`).value || `Candidate ${slot}`,
+                model_family: document.getElementById(`cmpFamily${slot}`).value,
+                version_name: document.getElementById(`cmpVersion${slot}`).value,
+              }))
+              .filter((item) => item.version_name);
+
+            if (items.length === 0) {
+              writeLog('Select at least one version to compare.', 'warn');
+              return;
+            }
+
+            try {
+              const response = await fetch('/compare-versions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  test_dataset: document.getElementById('compareDataset').value,
+                  items,
+                }),
+              });
+              const payload = await response.json();
+              if (!response.ok) {
+                throw new Error(payload.detail || JSON.stringify(payload));
+              }
+
+              const results = payload.results || [];
+              renderVersionComparisonChart(results);
+
+              const text = results
+                .map((entry) => {
+                  if (entry.error || !entry.metrics) {
+                    return `${entry.label}: ${entry.error || 'No metrics'}`;
+                  }
+                  return `${entry.label} (${entry.version_name}) accuracy ${(entry.metrics.accuracy * 100).toFixed(1)}%`;
+                })
+                .join(' | ');
+              document.getElementById('compareResultText').textContent = text || 'No results returned.';
+              writeLog(`VERSION COMPARE success: ${text}`, 'success');
+            } catch (error) {
+              writeLog(`VERSION COMPARE failed: ${error}`, 'error');
+            }
+          }
+
           writeLog('Dashboard initialized. Waiting for system status...', 'info');
+          refreshVersionRegistry();
           refreshStatus();
           setInterval(refreshStatus, 15000);
+          setInterval(refreshVersionRegistry, 30000);
         </script>
       </body>
     </html>

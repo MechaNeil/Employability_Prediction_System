@@ -1,0 +1,57 @@
+{
+  "families": {
+    "main_model": {
+      "active": "main_model_v3",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "main_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v1.pkl",
+          "created_utc": "2026-03-22T12:34:42.883477+00:00",
+          "size_bytes": 1658217,
+          "metadata": {
+            "source": "legacy_bootstrap",
+            "dataset": "set1"
+          }
+        },
+        {
+          "version": 2,
+          "version_name": "main_model_v2",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v2.pkl",
+          "created_utc": "2026-03-22T12:34:43.197310+00:00",
+          "size_bytes": 1658217,
+          "metadata": {
+            "dataset": "set1",
+            "mode": "main_train"
+          }
+        },
+        {
+          "version": 3,
+          "version_name": "main_model_v3",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v3.pkl",
+          "created_utc": "2026-03-22T12:35:00.166439+00:00",
+          "size_bytes": 1658217,
+          "metadata": {
+            "dataset": "set1",
+            "mode": "main_train"
+          }
+        }
+      ]
+    },
+    "global_model": {
+      "active": "global_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "global_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\global_model\\global_model_v1.pkl",
+          "created_utc": "2026-03-22T12:34:42.902122+00:00",
+          "size_bytes": 4287884,
+          "metadata": {
+            "source": "legacy_bootstrap"
+          }
+        }
+      ]
+    }
+  }
+}

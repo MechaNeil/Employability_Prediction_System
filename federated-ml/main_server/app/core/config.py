@@ -12,8 +12,12 @@ GLOBAL_MODEL_PATH = MODELS_DIR / "main_model_v2.pkl"
 
 HOSPITAL_1_RETRAIN_URL = "http://localhost:8001/retrain"
 HOSPITAL_1_MODEL_URL = "http://localhost:8001/model"
+HOSPITAL_1_UPLOAD_URL = "http://localhost:8001/model/upload"
+HOSPITAL_1_ACTIVATE_URL = "http://localhost:8001/model/activate"
 HOSPITAL_2_RETRAIN_URL = "http://localhost:8002/retrain"
 HOSPITAL_2_MODEL_URL = "http://localhost:8002/model"
+HOSPITAL_2_UPLOAD_URL = "http://localhost:8002/model/upload"
+HOSPITAL_2_ACTIVATE_URL = "http://localhost:8002/model/activate"
 HOSPITAL_1_HEALTH_URL = "http://localhost:8001/health"
 HOSPITAL_2_HEALTH_URL = "http://localhost:8002/health"
 
