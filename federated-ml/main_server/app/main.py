@@ -408,6 +408,21 @@ def dashboard_placeholder() -> str:
             color: #66748f;
           }
 
+          .status-inline {
+            display: inline-block;
+            margin-left: 8px;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            vertical-align: middle;
+          }
+
+          .status-inline.ready { background: #10a86d; }
+          .status-inline.pending { background: #8a95ad; }
+          .status-inline.offline { background: #e35151; }
+
           .workflow-head {
             display: flex;
             align-items: center;
@@ -460,44 +475,6 @@ def dashboard_placeholder() -> str:
             justify-content: space-between;
             gap: 8px;
           }
-
-          .model-state-list {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 12px;
-            background: #f8faff;
-          }
-
-          .model-state-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 7px 8px;
-            border-bottom: 1px solid #e4ebf8;
-            font-size: 13px;
-            color: #27375a;
-          }
-
-          .model-state-item:last-child {
-            border-bottom: 0;
-          }
-
-          .model-state-badge {
-            border-radius: 999px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #fff;
-            min-width: 76px;
-            text-align: center;
-          }
-
-          .model-state-badge.ready { background: #10a86d; }
-          .model-state-badge.pending { background: #8a95ad; }
-          .model-state-badge.offline { background: #e35151; }
-          .model-state-badge.processing { background: #4465d8; }
 
           .log {
             margin-top: 12px;
@@ -698,18 +675,12 @@ def dashboard_placeholder() -> str:
                   <span id="workflowDetail">Waiting for first status sync...</span>
                   <strong id="workflowProgressText">0%</strong>
                 </div>
-                <div class="model-state-list">
-                  <div class="model-state-item"><span>Main model</span><span id="modelStateMain" class="model-state-badge pending">pending</span></div>
-                  <div class="model-state-item"><span>Hospital-1 local model</span><span id="modelStateH1" class="model-state-badge pending">pending</span></div>
-                  <div class="model-state-item"><span>Hospital-2 local model</span><span id="modelStateH2" class="model-state-badge pending">pending</span></div>
-                  <div class="model-state-item"><span>Global model v2</span><span id="modelStateGlobal" class="model-state-badge pending">pending</span></div>
-                </div>
                 <div class="timeline">
-                  <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub">Random Forest on Set-1</div></div>
-                  <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployed</div><div class="step-sub">Ready for remote retraining</div></div>
-                  <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Online</div><div class="step-sub">Service + local model endpoint</div></div>
-                  <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Online</div><div class="step-sub">Service + local model endpoint</div></div>
-                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregation Complete</div><div class="step-sub">Global model v2 generated</div></div>
+                  <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub" id="stepMainSub">Main model status <span id="stepMainState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployed</div><div class="step-sub" id="stepDeploySub">Deployment status <span id="stepDeployState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Online</div><div class="step-sub" id="stepH1Sub">Hospital-1 connection <span id="stepH1State" class="status-inline pending">pending</span></div></div>
+                  <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Online</div><div class="step-sub" id="stepH2Sub">Hospital-2 connection <span id="stepH2State" class="status-inline pending">pending</span></div></div>
+                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregation Complete</div><div class="step-sub" id="stepGlobalSub">Global model status <span id="stepGlobalState" class="status-inline pending">pending</span></div></div>
                 </div>
               </div>
             </section>
@@ -790,10 +761,11 @@ def dashboard_placeholder() -> str:
             node.className = `state ${kind}`;
           }
 
-          function setModelState(id, text, kind) {
+          function setStepStatus(id, text, kind) {
             const node = document.getElementById(id);
+            if (!node) return;
             node.textContent = text;
-            node.className = `model-state-badge ${kind}`;
+            node.className = `status-inline ${kind}`;
           }
 
           function toPercent(value) {
@@ -870,10 +842,11 @@ def dashboard_placeholder() -> str:
             setStep('stepH2', h2 ? 'ok' : 'bad');
             setStep('stepGlobal', globalReady ? 'ok' : 'pending');
 
-            setModelState('modelStateMain', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
-            setModelState('modelStateH1', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline');
-            setModelState('modelStateH2', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline');
-            setModelState('modelStateGlobal', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
+            setStepStatus('stepMainState', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
+            setStepStatus('stepDeployState', mainReady && h1 && h2 ? 'ready' : 'pending', mainReady && h1 && h2 ? 'ready' : 'pending');
+            setStepStatus('stepH1State', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline');
+            setStepStatus('stepH2State', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline');
+            setStepStatus('stepGlobalState', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
 
             const completed = [mainReady, mainReady && h1 && h2, h1, h2, globalReady].filter(Boolean).length;
             const progress = completed * 20;
