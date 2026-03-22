@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 from hospital_1.app.core.config import LEGACY_MODEL_PATH, MODELS_DIR
 from hospital_1.app.services.model_registry import activate, get_active, initialize_registry, register_version
-from shared.constants import FEATURE_COLUMNS, RANDOM_STATE, SET2_FILE, TARGET_COLUMN
+from shared.constants import FEATURE_COLUMNS, RANDOM_STATE, TARGET_COLUMN
 from shared.datasets import get_dataset_path, normalize_dataset_key
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -18,7 +18,7 @@ MAIN_MODEL_V1 = ROOT / "main_server" / "app" / "models" / "model.pkl"
 
 
 def _fit_fresh_model(dataset_key: str):
-    dataset_path = get_dataset_path(dataset_key)
+    dataset_path = get_dataset_path(dataset_key, purpose="train")
     df = pd.read_csv(dataset_path)
     x = df[FEATURE_COLUMNS]
     y = df[TARGET_COLUMN]
@@ -47,7 +47,7 @@ def _persist_version(model, *, dataset_key: str, mode: str) -> dict[str, object]
 def train_or_retrain_model(dataset_key: str = "set2", retrain_from_main: bool = False) -> dict[str, object]:
     initialize_registry()
     selected_dataset = normalize_dataset_key(dataset_key)
-    df = pd.read_csv(get_dataset_path(selected_dataset))
+    df = pd.read_csv(get_dataset_path(selected_dataset, purpose="train"))
     x = df[FEATURE_COLUMNS]
     y = df[TARGET_COLUMN]
 

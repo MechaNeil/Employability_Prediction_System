@@ -13,7 +13,7 @@ from shared.datasets import get_dataset_path, normalize_dataset_key
 def train_main_model(dataset: str = "set1") -> dict[str, object]:
     bootstrap_registry()
     dataset_key = normalize_dataset_key(dataset)
-    dataset_path = get_dataset_path(dataset_key)
+    dataset_path = get_dataset_path(dataset_key, purpose="train")
     df = pd.read_csv(dataset_path)
 
     x = df[FEATURE_COLUMNS]

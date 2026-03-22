@@ -23,8 +23,8 @@ from main_server.app.core.config import (
 )
 from main_server.app.services.evaluation import evaluate_global_model
 from main_server.app.services.model_registry import get_registry_overview
-from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN, TEST_FILE
-from shared.datasets import get_dataset_path, normalize_dataset_key
+from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
+from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
 
 
 def _model_info(path: Path) -> dict[str, object]:
@@ -71,7 +71,8 @@ def get_model_versions() -> dict[str, object]:
 
 def _safe_accuracy(model) -> float | None:
     try:
-        df = pd.read_csv(TEST_FILE)
+        test_frames = [pd.read_csv(path) for path in get_all_test_dataset_paths()]
+        df = pd.concat(test_frames, ignore_index=True)
         x = df[FEATURE_COLUMNS]
         y = df[TARGET_COLUMN]
         preds = model.predict(x)
@@ -85,7 +86,8 @@ def _safe_metric_bundle(model) -> dict[str, float] | None:
         return None
 
     try:
-        df = pd.read_csv(TEST_FILE)
+        test_frames = [pd.read_csv(path) for path in get_all_test_dataset_paths()]
+        df = pd.concat(test_frames, ignore_index=True)
         x = df[FEATURE_COLUMNS]
         y = df[TARGET_COLUMN]
         preds = model.predict(x)
@@ -101,7 +103,7 @@ def _safe_metric_bundle(model) -> dict[str, float] | None:
 
 def _metric_bundle_for_dataset(model, dataset_key: str) -> dict[str, float] | None:
     try:
-        dataset_path = get_dataset_path(dataset_key)
+        dataset_path = get_dataset_path(dataset_key, purpose="test")
         df = pd.read_csv(dataset_path)
         x = df[FEATURE_COLUMNS]
         y = df[TARGET_COLUMN]

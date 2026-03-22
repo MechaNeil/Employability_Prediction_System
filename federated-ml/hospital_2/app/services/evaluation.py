@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 
 from hospital_2.app.services.model_registry import get_active
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
-from shared.datasets import get_dataset_path
+from shared.datasets import get_dataset_path, normalize_dataset_key
 
 
 def evaluate_active_model(test_dataset: str) -> dict[str, object]:
@@ -15,7 +15,8 @@ def evaluate_active_model(test_dataset: str) -> dict[str, object]:
         raise FileNotFoundError("No active model available for hospital_2.")
 
     model = joblib.load(active["path"])
-    dataset_path = get_dataset_path(test_dataset)
+    dataset_key = normalize_dataset_key(test_dataset)
+    dataset_path = get_dataset_path(dataset_key, purpose="test")
     df = pd.read_csv(dataset_path)
 
     x = df[FEATURE_COLUMNS]
@@ -24,7 +25,7 @@ def evaluate_active_model(test_dataset: str) -> dict[str, object]:
 
     return {
         "version_name": active["version_name"],
-        "dataset": test_dataset,
+        "dataset": dataset_key,
         "rows": int(len(df)),
         "accuracy": float(accuracy_score(y, preds)),
         "precision": float(precision_score(y, preds, zero_division=0)),

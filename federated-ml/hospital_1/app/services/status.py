@@ -21,7 +21,7 @@ def _safe_eval(dataset: str) -> dict[str, object] | None:
 
 def _eval_model_path(model_path: str, test_dataset: str) -> dict[str, float]:
     model = joblib.load(model_path)
-    df = pd.read_csv(get_dataset_path(test_dataset))
+    df = pd.read_csv(get_dataset_path(test_dataset, purpose="test"))
     x = df[FEATURE_COLUMNS]
     y = df[TARGET_COLUMN]
     preds = model.predict(x)

@@ -4,6 +4,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DATASET = PROJECT_ROOT / "Student-Employability-Datasets.csv"
 SPLIT_DIR = PROJECT_ROOT / "dataset"
 
+SET1_DIR = SPLIT_DIR / "Set-1"
+SET2_DIR = SPLIT_DIR / "Set-2"
+SET3_DIR = SPLIT_DIR / "Set-3"
+
 NAME_COLUMN = "Name of Student"
 TARGET_COLUMN = "CLASS"
 
@@ -25,9 +29,16 @@ LABEL_MAP = {
 
 INV_LABEL_MAP = {value: key for key, value in LABEL_MAP.items()}
 
-SET1_FILE = SPLIT_DIR / "set1.csv"
-SET2_FILE = SPLIT_DIR / "set2.csv"
-SET3_FILE = SPLIT_DIR / "set3.csv"
-TEST_FILE = SPLIT_DIR / "test.csv"
+SET1_TRAIN_FILE = SET1_DIR / "set-1_train_data.csv"
+SET1_TEST_FILE = SET1_DIR / "set-1_test_data.csv"
+SET2_TRAIN_FILE = SET2_DIR / "set-2_train_data.csv"
+SET2_TEST_FILE = SET2_DIR / "set-2_test_data.csv"
+SET3_TRAIN_FILE = SET3_DIR / "set-3_train_data.csv"
+SET3_TEST_FILE = SET3_DIR / "set-3_test_data.csv"
+
+# Backward-compatible aliases used by existing training logic.
+SET1_FILE = SET1_TRAIN_FILE
+SET2_FILE = SET2_TRAIN_FILE
+SET3_FILE = SET3_TRAIN_FILE
 
 RANDOM_STATE = 42
