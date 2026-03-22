@@ -126,6 +126,23 @@ def dashboard_placeholder() -> str:
             background: rgba(255, 255, 255, 0.04);
           }
 
+          .nav-button {
+            width: 100%;
+            border: 0;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+          }
+
+          .nav-item.hint {
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b9c7ea;
+            background: rgba(255, 255, 255, 0.06);
+          }
+
           .nav-item.active {
             background: linear-gradient(90deg, #2f66ff, #2457dc);
             color: #fff;
@@ -374,6 +391,7 @@ def dashboard_placeholder() -> str:
 
           .step.ok::before { background: #13ab6d; }
           .step.bad::before { background: #ea5757; }
+          .step.pending::before { background: #8ea0be; }
 
           .step-title {
             font-size: 14px;
@@ -390,6 +408,97 @@ def dashboard_placeholder() -> str:
             color: #66748f;
           }
 
+          .workflow-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+          }
+
+          .workflow-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+          }
+
+          .workflow-chip.good { background: #10a86d; }
+          .workflow-chip.warn { background: #c38218; }
+          .workflow-chip.bad { background: #e35151; }
+          .workflow-chip.processing { background: #4465d8; }
+
+          .progress-wrap {
+            margin-bottom: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #e8eefb;
+            border: 1px solid #d6e0f4;
+          }
+
+          .progress-bar {
+            height: 12px;
+            width: 0;
+            background: linear-gradient(90deg, #2f66ff, #10a86d);
+            transition: width 0.35s ease;
+          }
+
+          .progress-bar.indeterminate {
+            width: 45%;
+            animation: flow 1.1s ease-in-out infinite;
+          }
+
+          .progress-meta {
+            margin: 2px 0 10px;
+            font-size: 12px;
+            color: #5f6f8d;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+          }
+
+          .model-state-list {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 12px;
+            background: #f8faff;
+          }
+
+          .model-state-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 8px;
+            border-bottom: 1px solid #e4ebf8;
+            font-size: 13px;
+            color: #27375a;
+          }
+
+          .model-state-item:last-child {
+            border-bottom: 0;
+          }
+
+          .model-state-badge {
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            min-width: 76px;
+            text-align: center;
+          }
+
+          .model-state-badge.ready { background: #10a86d; }
+          .model-state-badge.pending { background: #8a95ad; }
+          .model-state-badge.offline { background: #e35151; }
+          .model-state-badge.processing { background: #4465d8; }
+
           .log {
             margin-top: 12px;
             background: #0f182d;
@@ -400,6 +509,11 @@ def dashboard_placeholder() -> str:
             height: 148px;
             overflow: auto;
           }
+
+          .log-line.info { color: #d9e9ff; }
+          .log-line.success { color: #8cf5c9; }
+          .log-line.warn { color: #ffd28f; }
+          .log-line.error { color: #ff9898; }
 
           .footer {
             margin-top: 10px;
@@ -416,6 +530,11 @@ def dashboard_placeholder() -> str:
               transform: translateY(0);
               opacity: 1;
             }
+          }
+
+          @keyframes flow {
+            0% { transform: translateX(-90%); }
+            100% { transform: translateX(230%); }
           }
 
           @media (max-width: 1260px) {
@@ -462,9 +581,15 @@ def dashboard_placeholder() -> str:
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Deploy to Hospitals</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>Aggregate Models</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Global</div>
+            <div class="group-title">Hospital Dashboards</div>
+            <button class="nav-item nav-button" onclick="openHospitalDashboard(1)"><span class="nav-icon"><i class="fa-solid fa-hospital"></i></span>Hospital-1 Dashboard</button>
+            <button class="nav-item nav-button" onclick="openHospitalDashboard(2)"><span class="nav-icon"><i class="fa-solid fa-hospital-user"></i></span>Hospital-2 Dashboard</button>
+            <div class="nav-item hint"><span class="nav-icon"><i class="fa-solid fa-circle-info"></i></span>Placeholder links for separate hospital UI pages.</div>
             <div class="group-title">System</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-server"></i></span>API Status</div>
-            <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-scroll"></i></span>Logs</div>
+            <button class="nav-item nav-button" onclick="placeholderAction('view-logs')"><span class="nav-icon"><i class="fa-solid fa-scroll"></i></span>Logs</button>
+            <button class="nav-item nav-button" onclick="placeholderAction('alerts')"><span class="nav-icon"><i class="fa-solid fa-bell"></i></span>Alert Center</button>
+            <button class="nav-item nav-button" onclick="placeholderAction('exports')"><span class="nav-icon"><i class="fa-solid fa-file-export"></i></span>Export Reports</button>
           </aside>
 
           <main class="main">
@@ -563,12 +688,28 @@ def dashboard_placeholder() -> str:
               </div>
               <div class="panel">
                 <h3 class="panel-title">Workflow Status</h3>
+                <div class="workflow-head">
+                  <div id="workflowChip" class="workflow-chip warn"><i class="fa-solid fa-circle-notch"></i>Checking Status</div>
+                </div>
+                <div class="progress-wrap">
+                  <div id="workflowProgressBar" class="progress-bar"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="workflowDetail">Waiting for first status sync...</span>
+                  <strong id="workflowProgressText">0%</strong>
+                </div>
+                <div class="model-state-list">
+                  <div class="model-state-item"><span>Main model</span><span id="modelStateMain" class="model-state-badge pending">pending</span></div>
+                  <div class="model-state-item"><span>Hospital-1 local model</span><span id="modelStateH1" class="model-state-badge pending">pending</span></div>
+                  <div class="model-state-item"><span>Hospital-2 local model</span><span id="modelStateH2" class="model-state-badge pending">pending</span></div>
+                  <div class="model-state-item"><span>Global model v2</span><span id="modelStateGlobal" class="model-state-badge pending">pending</span></div>
+                </div>
                 <div class="timeline">
-                  <div id="stepMain" class="step"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub">Random Forest on Set-1</div></div>
-                  <div id="stepDeploy" class="step"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployed</div><div class="step-sub">Ready for remote retraining</div></div>
-                  <div id="stepH1" class="step"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Online</div><div class="step-sub">Service + local model endpoint</div></div>
-                  <div id="stepH2" class="step"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Online</div><div class="step-sub">Service + local model endpoint</div></div>
-                  <div id="stepGlobal" class="step"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregation Complete</div><div class="step-sub">Global model v2 generated</div></div>
+                  <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub">Random Forest on Set-1</div></div>
+                  <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployed</div><div class="step-sub">Ready for remote retraining</div></div>
+                  <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Online</div><div class="step-sub">Service + local model endpoint</div></div>
+                  <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Online</div><div class="step-sub">Service + local model endpoint</div></div>
+                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregation Complete</div><div class="step-sub">Global model v2 generated</div></div>
                 </div>
               </div>
             </section>
@@ -584,16 +725,57 @@ def dashboard_placeholder() -> str:
 
         <script>
           const logEl = document.getElementById('activityLog');
+          const workflowChip = document.getElementById('workflowChip');
+          const workflowDetail = document.getElementById('workflowDetail');
+          const workflowProgressText = document.getElementById('workflowProgressText');
+          const workflowProgressBar = document.getElementById('workflowProgressBar');
+          let isActionInFlight = false;
+          let lastSnapshot = null;
 
-          function writeLog(message) {
+          function writeLog(message, kind = 'info') {
             const stamp = new Date().toLocaleTimeString();
-            logEl.textContent = `[${stamp}] ${message}\n` + logEl.textContent;
+            logEl.innerHTML = `<div class="log-line ${kind}">[${stamp}] ${message}</div>` + logEl.innerHTML;
             document.getElementById('lastUpdated').textContent = `Last updated: ${stamp}`;
           }
 
-          function setStep(id, ok) {
+          function openHospitalDashboard(hospital) {
+            const path = hospital === 1 ? 'http://localhost:8001/' : 'http://localhost:8002/';
+            window.open(path, '_blank', 'noopener,noreferrer');
+            writeLog(`Opened placeholder for Hospital-${hospital} dashboard: ${path}`, 'info');
+          }
+
+          function placeholderAction(action) {
+            const titles = {
+              'view-logs': 'Logs panel placeholder clicked.',
+              alerts: 'Alert center placeholder clicked.',
+              exports: 'Export reports placeholder clicked.',
+            };
+            writeLog(titles[action] || `Placeholder clicked: ${action}`, 'warn');
+          }
+
+          function setWorkflowState(text, kind, progress, detail, indeterminate = false) {
+            const iconByKind = {
+              good: 'fa-circle-check',
+              warn: 'fa-triangle-exclamation',
+              bad: 'fa-circle-xmark',
+              processing: 'fa-gear',
+            };
+            const clamped = Math.max(0, Math.min(100, progress));
+            workflowChip.className = `workflow-chip ${kind}`;
+            workflowChip.innerHTML = `<i class="fa-solid ${iconByKind[kind] || 'fa-circle-info'}"></i>${text}`;
+            workflowDetail.textContent = detail;
+            workflowProgressText.textContent = `${Math.round(clamped)}%`;
+            if (indeterminate) {
+              workflowProgressBar.className = 'progress-bar indeterminate';
+            } else {
+              workflowProgressBar.className = 'progress-bar';
+              workflowProgressBar.style.width = `${clamped}%`;
+            }
+          }
+
+          function setStep(id, state) {
             const node = document.getElementById(id);
-            node.className = `step ${ok ? 'ok' : 'bad'}`;
+            node.className = `step ${state}`;
           }
 
           function setTag(id, text, ok) {
@@ -606,6 +788,12 @@ def dashboard_placeholder() -> str:
             const node = document.getElementById(id);
             node.innerHTML = `${kind === 'online' ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle"></i>'}${text}`;
             node.className = `state ${kind}`;
+          }
+
+          function setModelState(id, text, kind) {
+            const node = document.getElementById(id);
+            node.textContent = text;
+            node.className = `model-state-badge ${kind}`;
           }
 
           function toPercent(value) {
@@ -658,6 +846,53 @@ def dashboard_placeholder() -> str:
             return { path: '/status', method: 'GET' };
           }
 
+          function actionText(action) {
+            if (action === 'train') return 'Training main model';
+            if (action === 'deploy') return 'Deploying model to hospitals';
+            if (action === 'retrain-hospitals') return 'Triggering remote retraining';
+            if (action === 'aggregate') return 'Aggregating local models';
+            if (action === 'evaluate') return 'Evaluating global model';
+            return 'Processing action';
+          }
+
+          function updateWorkflowFromStatus(status) {
+            const h1 = status.hospitals?.hospital_1?.online === true;
+            const h2 = status.hospitals?.hospital_2?.online === true;
+            const mainReady = status.models?.base_model?.exists === true;
+            const globalReady = status.models?.global_model?.exists === true;
+            const cmp = status.comparison || {};
+            const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
+            const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
+
+            setStep('stepMain', mainReady ? 'ok' : 'pending');
+            setStep('stepDeploy', mainReady && h1 && h2 ? 'ok' : (mainReady ? 'pending' : 'bad'));
+            setStep('stepH1', h1 ? 'ok' : 'bad');
+            setStep('stepH2', h2 ? 'ok' : 'bad');
+            setStep('stepGlobal', globalReady ? 'ok' : 'pending');
+
+            setModelState('modelStateMain', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
+            setModelState('modelStateH1', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline');
+            setModelState('modelStateH2', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline');
+            setModelState('modelStateGlobal', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
+
+            const completed = [mainReady, mainReady && h1 && h2, h1, h2, globalReady].filter(Boolean).length;
+            const progress = completed * 20;
+
+            if (isActionInFlight) {
+              setWorkflowState('Workflow Processing', 'processing', Math.max(progress, 35), 'Action is currently running...', true);
+            } else if (!h1 && !h2) {
+              setWorkflowState('Offline Services', 'bad', progress, 'Both hospitals are offline. Start hospital services first.');
+            } else if (!h1 || !h2) {
+              setWorkflowState('Partial Connectivity', 'warn', progress, 'One hospital is offline. Workflow is degraded.');
+            } else if (globalReady) {
+              setWorkflowState('Workflow Healthy', 'good', 100, 'Main, local, and global models are available.');
+            } else if (mainReady) {
+              setWorkflowState('Ready To Aggregate', 'warn', Math.max(progress, 40), 'Main model exists. Continue with retrain and aggregation.');
+            } else {
+              setWorkflowState('Waiting For Training', 'warn', Math.max(progress, 10), 'Train the main model to start federation.');
+            }
+          }
+
           async function refreshStatus() {
             try {
               const status = await fetch('/status').then((r) => r.json());
@@ -666,6 +901,8 @@ def dashboard_placeholder() -> str:
               const mainReady = status.models?.base_model?.exists === true;
               const globalReady = status.models?.global_model?.exists === true;
               const cmp = status.comparison || {};
+              const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
+              const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
 
               const mainPct = toPercent(cmp.main);
               const h1Pct = toPercent(cmp.hospital_1);
@@ -678,23 +915,31 @@ def dashboard_placeholder() -> str:
               document.getElementById('globalAcc').textContent = globalPct ? `${globalPct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
-              setTag('h1Tag', h1Pct ? 'Updated' : 'Outdated', Boolean(h1Pct));
-              setTag('h2Tag', h2Pct ? 'Updated' : 'Outdated', Boolean(h2Pct));
+              setTag('h1Tag', localModelH1 ? 'Updated' : 'Outdated', localModelH1);
+              setTag('h2Tag', localModelH2 ? 'Updated' : 'Outdated', localModelH2);
               setTag('globalTag', globalReady ? 'Aggregated' : 'Pending', globalReady);
 
               setState('h1State', h1 ? 'online' : 'offline', h1 ? 'online' : 'wait');
               setState('h2State', h2 ? 'online' : 'offline', h2 ? 'online' : 'wait');
 
-              setStep('stepMain', mainReady);
-              setStep('stepDeploy', mainReady && h1 && h2);
-              setStep('stepH1', h1);
-              setStep('stepH2', h2);
-              setStep('stepGlobal', globalReady);
+              updateWorkflowFromStatus(status);
 
               const systemBadge = document.getElementById('systemBadge');
               systemBadge.innerHTML = h1 && h2
                 ? '<i class="fa-solid fa-circle-check"></i>System Online'
                 : '<i class="fa-solid fa-triangle-exclamation"></i>Partial Connectivity';
+
+              if (lastSnapshot) {
+                const h1Changed = lastSnapshot.h1 !== h1;
+                const h2Changed = lastSnapshot.h2 !== h2;
+                const globalChanged = lastSnapshot.globalReady !== globalReady;
+                const mainChanged = lastSnapshot.mainReady !== mainReady;
+                if (h1Changed) writeLog(`Hospital-1 is now ${h1 ? 'online' : 'offline'}.`, h1 ? 'success' : 'error');
+                if (h2Changed) writeLog(`Hospital-2 is now ${h2 ? 'online' : 'offline'}.`, h2 ? 'success' : 'error');
+                if (mainChanged) writeLog(`Main model status changed to ${mainReady ? 'ready' : 'missing'}.`, mainReady ? 'success' : 'warn');
+                if (globalChanged) writeLog(`Global model status changed to ${globalReady ? 'ready' : 'pending'}.`, globalReady ? 'success' : 'warn');
+              }
+              lastSnapshot = { h1, h2, mainReady, globalReady };
 
               renderBars(
                 mainPct ? Number(mainPct) : null,
@@ -702,31 +947,37 @@ def dashboard_placeholder() -> str:
                 h2Pct ? Number(h2Pct) : null,
                 globalPct ? Number(globalPct) : null,
               );
-
-              writeLog('Status refreshed.');
             } catch (error) {
-              writeLog(`Status refresh failed: ${error}`);
+              setWorkflowState('Status Fetch Failed', 'bad', 0, 'Unable to reach status endpoint.');
+              writeLog(`Status refresh failed: ${error}`, 'error');
             }
           }
 
           async function runAction(action) {
             try {
+              isActionInFlight = true;
               setButtonsBusy(true);
+              setWorkflowState('Workflow Processing', 'processing', 35, `${actionText(action)}...`, true);
+              writeLog(`Action started: ${actionText(action)}.`, 'info');
               const endpoint = endpointFor(action);
               const res = await fetch(endpoint.path, { method: endpoint.method });
               const body = await res.json();
               if (!res.ok) {
                 throw new Error(body.detail || JSON.stringify(body));
               }
-              writeLog(`${action.toUpperCase()} success: ${JSON.stringify(body)}`);
+              writeLog(`${action.toUpperCase()} success: ${JSON.stringify(body)}`, 'success');
               await refreshStatus();
             } catch (error) {
-              writeLog(`${action.toUpperCase()} failed: ${error}`);
+              setWorkflowState('Workflow Error', 'bad', 20, `Action failed while ${actionText(action).toLowerCase()}.`);
+              writeLog(`${action.toUpperCase()} failed: ${error}`, 'error');
             } finally {
+              isActionInFlight = false;
               setButtonsBusy(false);
+              await refreshStatus();
             }
           }
 
+          writeLog('Dashboard initialized. Waiting for system status...', 'info');
           refreshStatus();
           setInterval(refreshStatus, 15000);
         </script>

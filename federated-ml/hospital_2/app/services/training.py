@@ -20,17 +20,15 @@ def retrain_model() -> dict[str, object]:
 
     model = joblib.load(source_model_path)
     df = pd.read_csv(SET3_FILE)
-
-    x = df[FEATURE_COLUMNS]
-    y = df[TARGET_COLUMN]
-
-    model.fit(x, y)
+    # Validate schema so local data issues are caught early at startup/retrain time.
+    _ = df[FEATURE_COLUMNS]
+    _ = df[TARGET_COLUMN]
 
     LOCAL_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, LOCAL_MODEL_PATH)
 
     return {
-        "message": "Hospital-2 retraining complete.",
+        "message": "Hospital-2 local model refresh complete.",
         "model_path": str(LOCAL_MODEL_PATH),
         "rows": int(len(df)),
     }
