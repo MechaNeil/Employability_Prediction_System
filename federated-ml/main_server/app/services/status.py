@@ -8,6 +8,9 @@ import joblib
 import pandas as pd
 import requests
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 
 from main_server.app.core.config import (
     BASE_MODEL_PATH,
@@ -73,6 +76,25 @@ def _safe_accuracy(model) -> float | None:
         return None
 
 
+def _safe_metric_bundle(model) -> dict[str, float] | None:
+    if model is None:
+        return None
+
+    try:
+        df = pd.read_csv(TEST_FILE)
+        x = df[FEATURE_COLUMNS]
+        y = df[TARGET_COLUMN]
+        preds = model.predict(x)
+        return {
+            "accuracy": float(accuracy_score(y, preds)),
+            "precision": float(precision_score(y, preds, zero_division=0)),
+            "recall": float(recall_score(y, preds, zero_division=0)),
+            "f1": float(f1_score(y, preds, zero_division=0)),
+        }
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _load_hospital_model(model_url: str):
     try:
         response = requests.get(model_url, timeout=10)
@@ -106,6 +128,20 @@ def get_performance_comparison() -> dict[str, float | None]:
     }
 
 
+def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
+    base_model = joblib.load(BASE_MODEL_PATH) if BASE_MODEL_PATH.exists() else None
+    global_model = joblib.load(GLOBAL_MODEL_PATH) if GLOBAL_MODEL_PATH.exists() else None
+    h1_model = _load_hospital_model(HOSPITAL_1_MODEL_URL)
+    h2_model = _load_hospital_model(HOSPITAL_2_MODEL_URL)
+
+    return {
+        "main": _safe_metric_bundle(base_model),
+        "hospital_1": _safe_metric_bundle(h1_model),
+        "hospital_2": _safe_metric_bundle(h2_model),
+        "global": _safe_metric_bundle(global_model),
+    }
+
+
 def get_system_status() -> dict[str, object]:
     metrics: dict[str, object]
     try:
@@ -115,6 +151,7 @@ def get_system_status() -> dict[str, object]:
 
     versions = get_model_versions()
     comparison = get_performance_comparison()
+    model_metrics = get_model_metric_comparison()
 
     return {
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
@@ -125,4 +162,5 @@ def get_system_status() -> dict[str, object]:
         "models": versions,
         "metrics": metrics,
         "comparison": comparison,
+        "model_metrics": model_metrics,
     }

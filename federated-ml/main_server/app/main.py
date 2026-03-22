@@ -26,6 +26,7 @@ def dashboard_placeholder() -> str:
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
         <style>
           :root {
             --deep-1: #08183c;
@@ -476,6 +477,95 @@ def dashboard_placeholder() -> str:
             gap: 8px;
           }
 
+          .eval-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          .eval-controls {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+
+          .eval-btn {
+            border: 1px solid #c7d5f3;
+            background: #f5f8ff;
+            color: #24447f;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.14s ease;
+          }
+
+          .eval-btn:hover { transform: translateY(-1px); }
+
+          .eval-btn.active {
+            background: #2f66ff;
+            border-color: #2f66ff;
+            color: #fff;
+          }
+
+          .eval-canvas-wrap {
+            margin-top: 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fcfdff, #f5f8ff);
+            padding: 10px;
+            min-height: 320px;
+          }
+
+          .eval-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #5e6c88;
+          }
+
+          .eval-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .eval-card {
+            border: 1px solid #d8e2f6;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 10px;
+          }
+
+          .eval-card h4 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #21345f;
+          }
+
+          .eval-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #495978;
+          }
+
+          .eval-line:last-child {
+            margin-bottom: 0;
+          }
+
+          .eval-value {
+            font-weight: 700;
+            color: #1f3159;
+          }
+
           .log {
             margin-top: 12px;
             background: #0f182d;
@@ -524,6 +614,7 @@ def dashboard_placeholder() -> str:
             .sidebar { padding: 12px; }
             .title { font-size: 36px; }
             .row { grid-template-columns: 1fr; }
+            .eval-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           }
 
           @media (max-width: 680px) {
@@ -538,6 +629,8 @@ def dashboard_placeholder() -> str:
             .nav-item { font-size: 16px; }
             .online { padding: 8px 12px; }
             .action { min-height: 74px; }
+            .eval-grid { grid-template-columns: 1fr; }
+            .eval-canvas-wrap { min-height: 280px; }
           }
         </style>
       </head>
@@ -663,6 +756,7 @@ def dashboard_placeholder() -> str:
                 <h3 class="panel-title">Model Performance Comparison</h3>
                 <div id="chart" class="chart"></div>
               </div>
+
               <div class="panel">
                 <h3 class="panel-title">Workflow Status</h3>
                 <div class="workflow-head">
@@ -677,15 +771,39 @@ def dashboard_placeholder() -> str:
                 </div>
                 <div class="timeline">
                   <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub" id="stepMainSub">Main model status <span id="stepMainState" class="status-inline pending">pending</span></div></div>
-                  <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployed</div><div class="step-sub" id="stepDeploySub">Deployment status <span id="stepDeployState" class="status-inline pending">pending</span></div></div>
-                  <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Online</div><div class="step-sub" id="stepH1Sub">Hospital-1 connection <span id="stepH1State" class="status-inline pending">pending</span></div></div>
-                  <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Online</div><div class="step-sub" id="stepH2Sub">Hospital-2 connection <span id="stepH2State" class="status-inline pending">pending</span></div></div>
-                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregation Complete</div><div class="step-sub" id="stepGlobalSub">Global model status <span id="stepGlobalState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployment</div><div class="step-sub" id="stepDeploySub">Deployment status <span id="stepDeployState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Model</div><div class="step-sub" id="stepH1Sub">Hospital-1 connection <span id="stepH1State" class="status-inline pending">pending</span></div></div>
+                  <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Model</div><div class="step-sub" id="stepH2Sub">Hospital-2 connection <span id="stepH2State" class="status-inline pending">pending</span></div></div>
+                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Global Model</div><div class="step-sub" id="stepGlobalSub">Global model status <span id="stepGlobalState" class="status-inline pending">pending</span></div></div>
                 </div>
+
               </div>
+              
+
             </section>
 
+            <section class="panel" style="margin-top:12px">
+              <div class="eval-head">
+                <h3 class="panel-title" style="margin-bottom:0">Model Evaluation</h3>
+                <div class="eval-controls">
+                  <button class="eval-btn active" id="evalModeBar" onclick="setEvaluationMode('bar')"><i class="fa-solid fa-chart-column"></i> Grouped Bars</button>
+                  <button class="eval-btn" id="evalModeRadar" onclick="setEvaluationMode('radar')"><i class="fa-solid fa-bullseye"></i> Radar</button>
+                  <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Global Eval</button>
+                </div>
+              </div>
+              <div class="eval-canvas-wrap">
+                <canvas id="evaluationChart"></canvas>
+              </div>
+              <p id="evaluationMeta" class="eval-meta">Metrics are synchronized from the status endpoint.</p>
+              <div id="evaluationGrid" class="eval-grid"></div>
+            </section>
+            
+
+            
+            <section class="panel" style="margin-top:12px">
+            <h3 class="panel-title">Activity Logs</h3>
             <div id="activityLog" class="log"></div>
+            </section>
 
             <div class="footer">
               <span>Federated Learning System | Central Server - FastAPI</span>
@@ -700,8 +818,21 @@ def dashboard_placeholder() -> str:
           const workflowDetail = document.getElementById('workflowDetail');
           const workflowProgressText = document.getElementById('workflowProgressText');
           const workflowProgressBar = document.getElementById('workflowProgressBar');
+          const evaluationMeta = document.getElementById('evaluationMeta');
+          const evaluationGrid = document.getElementById('evaluationGrid');
+          const modelColors = {
+            main: { label: 'Main Model', border: '#2f66ff', fill: 'rgba(47, 102, 255, 0.20)' },
+            hospital_1: { label: 'Hospital-1', border: '#10a86d', fill: 'rgba(16, 168, 109, 0.20)' },
+            hospital_2: { label: 'Hospital-2', border: '#7a39d8', fill: 'rgba(122, 57, 216, 0.20)' },
+            global: { label: 'Global Model', border: '#f28a1b', fill: 'rgba(242, 138, 27, 0.22)' },
+          };
+          const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1 Score'];
           let isActionInFlight = false;
           let lastSnapshot = null;
+          let evaluationChart = null;
+          let evaluationMode = 'bar';
+          let latestModelMetrics = null;
+          let lastEvaluationSignature = null;
 
           function writeLog(message, kind = 'info') {
             const stamp = new Date().toLocaleTimeString();
@@ -800,6 +931,183 @@ def dashboard_placeholder() -> str:
               .join('');
           }
 
+          function metricToPercent(value) {
+            if (value === null || value === undefined) {
+              return null;
+            }
+            return Math.max(0, Math.min(100, Number((value * 100).toFixed(1))));
+          }
+
+          function normalizeModelMetrics(status) {
+            const comparison = status.comparison || {};
+            const modelMetrics = status.model_metrics || {};
+            const globalMetrics = status.metrics || {};
+
+            const fromBundle = (bundle) => {
+              if (!bundle || typeof bundle !== 'object') {
+                return [null, null, null, null];
+              }
+              return [
+                metricToPercent(bundle.accuracy),
+                metricToPercent(bundle.precision),
+                metricToPercent(bundle.recall),
+                metricToPercent(bundle.f1),
+              ];
+            };
+
+            const main = fromBundle(modelMetrics.main);
+            const h1 = fromBundle(modelMetrics.hospital_1);
+            const h2 = fromBundle(modelMetrics.hospital_2);
+            const global = fromBundle(modelMetrics.global);
+
+            if (main[0] === null) main[0] = metricToPercent(comparison.main);
+            if (h1[0] === null) h1[0] = metricToPercent(comparison.hospital_1);
+            if (h2[0] === null) h2[0] = metricToPercent(comparison.hospital_2);
+            if (global[0] === null) global[0] = metricToPercent(comparison.global);
+
+            if (global[1] === null) global[1] = metricToPercent(globalMetrics.precision);
+            if (global[2] === null) global[2] = metricToPercent(globalMetrics.recall);
+            if (global[3] === null) global[3] = metricToPercent(globalMetrics.f1);
+
+            return {
+              main,
+              hospital_1: h1,
+              hospital_2: h2,
+              global,
+            };
+          }
+
+          function buildEvaluationDatasets(metricsByModel) {
+            const order = ['main', 'hospital_1', 'hospital_2', 'global'];
+            return order.map((key) => ({
+              key,
+              label: modelColors[key].label,
+              values: metricsByModel[key],
+            }));
+          }
+
+          function renderEvaluationGrid(metricsByModel) {
+            const datasets = buildEvaluationDatasets(metricsByModel);
+            evaluationGrid.innerHTML = datasets
+              .map((dataset) => {
+                const rows = metricLabels
+                  .map((metricLabel, idx) => {
+                    const value = dataset.values[idx];
+                    return `<div class="eval-line"><span>${metricLabel}</span><span class="eval-value">${value === null ? 'N/A' : `${value.toFixed(1)}%`}</span></div>`;
+                  })
+                  .join('');
+                return `<article class="eval-card"><h4>${dataset.label}</h4>${rows}</article>`;
+              })
+              .join('');
+          }
+
+          function renderEvaluationChart(metricsByModel) {
+            if (!window.Chart) {
+              evaluationMeta.textContent = 'Chart library not loaded. Metrics still shown below.';
+              return;
+            }
+
+            const canvas = document.getElementById('evaluationChart');
+            if (!canvas) return;
+
+            if (evaluationChart) {
+              evaluationChart.destroy();
+            }
+
+            const datasets = buildEvaluationDatasets(metricsByModel).map((dataset) => {
+              const color = modelColors[dataset.key];
+              return {
+                label: dataset.label,
+                data: dataset.values,
+                borderColor: color.border,
+                backgroundColor: color.fill,
+                borderWidth: 2,
+                borderRadius: 6,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.2,
+                spanGaps: true,
+              };
+            });
+
+            const isRadar = evaluationMode === 'radar';
+            evaluationChart = new Chart(canvas, {
+              type: isRadar ? 'radar' : 'bar',
+              data: {
+                labels: metricLabels,
+                datasets,
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
+                plugins: {
+                  legend: {
+                    position: 'top',
+                    labels: {
+                      usePointStyle: true,
+                      padding: 14,
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y !== undefined ? ctx.parsed.y.toFixed(1) : ctx.raw.toFixed(1)}%`,
+                    },
+                  },
+                },
+                scales: isRadar
+                  ? {
+                      r: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                          stepSize: 20,
+                          backdropColor: 'transparent',
+                          callback: (value) => `${value}%`,
+                        },
+                        pointLabels: {
+                          color: '#243a66',
+                          font: { weight: '700' },
+                        },
+                      },
+                    }
+                  : {
+                      y: {
+                        beginAtZero: true,
+                        suggestedMax: 100,
+                        ticks: {
+                          callback: (value) => `${value}%`,
+                        },
+                      },
+                      x: {
+                        ticks: {
+                          color: '#26385f',
+                          font: { weight: '700' },
+                        },
+                      },
+                    },
+              },
+            });
+          }
+
+          function renderEvaluation(metricsByModel) {
+            renderEvaluationChart(metricsByModel);
+            renderEvaluationGrid(metricsByModel);
+          }
+
+          function setEvaluationMode(mode) {
+            evaluationMode = mode === 'radar' ? 'radar' : 'bar';
+            document.getElementById('evalModeBar').classList.toggle('active', evaluationMode === 'bar');
+            document.getElementById('evalModeRadar').classList.toggle('active', evaluationMode === 'radar');
+            if (latestModelMetrics) {
+              renderEvaluation(latestModelMetrics);
+            }
+          }
+
           function setButtonsBusy(isBusy) {
             ['btnTrain', 'btnDeploy', 'btnRetrain', 'btnAggregate', 'btnEvaluate'].forEach((id) => {
               const button = document.getElementById(id);
@@ -894,6 +1202,16 @@ def dashboard_placeholder() -> str:
 
               setState('h1State', h1 ? 'online' : 'offline', h1 ? 'online' : 'wait');
               setState('h2State', h2 ? 'online' : 'offline', h2 ? 'online' : 'wait');
+
+              latestModelMetrics = normalizeModelMetrics(status);
+              const evaluationSignature = JSON.stringify(latestModelMetrics);
+              if (evaluationSignature !== lastEvaluationSignature) {
+                renderEvaluation(latestModelMetrics);
+                lastEvaluationSignature = evaluationSignature;
+              }
+
+              const readyModels = Object.values(latestModelMetrics).filter((metrics) => metrics.every((m) => m !== null)).length;
+              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/4 models have complete metrics.`;
 
               updateWorkflowFromStatus(status);
 
