@@ -607,6 +607,10 @@
             color: #fff;
           }
 
+          .eval-controls .fa-spinner {
+            display: none !important;
+          }
+
           .eval-canvas-wrap {
             margin-top: 10px;
             border: 1px solid var(--line);
@@ -627,6 +631,29 @@
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 8px;
+          }
+
+          .eval-guide {
+            margin-top: 10px;
+            border: 1px dashed #c8d7f5;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #f8fbff, #f2f7ff);
+            padding: 10px;
+            font-size: 12px;
+            color: #44577d;
+          }
+
+          .eval-guide strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #233761;
+          }
+
+          .eval-steps {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 4px;
           }
 
           .version-compare-grid {
@@ -794,7 +821,7 @@
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-play"></i></span>Train Main Model</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Deploy to Hospitals</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>Aggregate Models</div>
-            <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Global</div>
+            <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Global</button>
             <div class="group-title">Hospital Dashboards</div>
             <button class="nav-item nav-button" onclick="openHospitalDashboard(1)"><span class="nav-icon"><i class="fa-solid fa-hospital"></i></span>Hospital-1 Dashboard</button>
             <button class="nav-item nav-button" onclick="openHospitalDashboard(2)"><span class="nav-icon"><i class="fa-solid fa-hospital-user"></i></span>Hospital-2 Dashboard</button>
@@ -975,14 +1002,29 @@
 
             </section>
 
-            <section class="panel" style="margin-top:12px">
+            <section class="panel" id="evaluationPanel" style="margin-top:12px">
               <div class="eval-head">
                 <h3 class="panel-title" style="margin-bottom:0">Model Evaluation</h3>
                 <div class="eval-controls">
+                  <select id="evalDataset" class="control-input" style="min-width:120px;">
+                    <option value="all" selected>All Test Sets</option>
+                    <option value="set1">Test Set-1</option>
+                    <option value="set2">Test Set-2</option>
+                    <option value="set3">Test Set-3</option>
+                  </select>
                   <button class="eval-btn active" id="evalModeBar" onclick="setEvaluationMode('bar')"><i class="fa-solid fa-chart-column"></i> Grouped Bars</button>
                   <button class="eval-btn" id="evalModeRadar" onclick="setEvaluationMode('radar')"><i class="fa-solid fa-bullseye"></i> Radar</button>
                   <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Global Eval</button>
                 </div>
+              </div>
+              <div class="eval-guide">
+                <strong>How to run and read evaluation</strong>
+                <ol class="eval-steps">
+                  <li>Select a test dataset (or use all test sets).</li>
+                  <li>Click Run Global Eval to evaluate the latest global model.</li>
+                  <li>Switch between Grouped Bars and Radar for easier comparison.</li>
+                  <li>Use the metric cards to review Accuracy, Precision, Recall, and F1.</li>
+                </ol>
               </div>
               <div class="eval-canvas-wrap">
                 <canvas id="evaluationChart"></canvas>

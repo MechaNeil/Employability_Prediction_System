@@ -21,7 +21,7 @@ Build a privacy-preserving, distributed learning workflow where each hospital tr
 - `hospital_1` (docker): local retraining on Set-2
 - `hospital_2` (docker): local retraining on Set-3
 - `shared`: dataset split and schema constants
-- `dataset`: generated split outputs (`set1.csv`, `set2.csv`, `set3.csv`, `test.csv`)
+- `dataset`: generated split outputs in set folders (`Set-1`, `Set-2`, `Set-3`)
 
 ### Why this is Federated
 
@@ -65,7 +65,7 @@ federated-ml/
 
 ## 3. Data Pipeline
 
-Source dataset: `../Student-Employability-Datasets.csv`
+Source dataset: `Student-Employability-Datasets.csv`
 
 ### Split Strategy
 
@@ -73,13 +73,23 @@ Source dataset: `../Student-Employability-Datasets.csv`
 2. Map target labels:
 	 - `LessEmployable -> 0`
 	 - `Employable -> 1`
-3. Split full dataset:
-	 - 80% train
-	 - 20% test
-4. Split train into federated subsets:
-	 - Set-1: for main server initial training
-	 - Set-2: for Hospital-1 retraining
-	 - Set-3: for Hospital-2 retraining
+3. Stratified split full dataset into federated set totals:
+	 - Set-1 total: 1250
+	 - Set-2 total: 1000
+	 - Set-3 total: 732
+4. Stratified split each set into train/test using an 80/20 ratio:
+	 - Set-1: 1000 train, 250 test
+	 - Set-2: 800 train, 200 test
+	 - Set-3: 586 train, 146 test
+
+Current split summary from the dataset in this repository:
+
+| Dataset | Training | Testing | Total |
+|---|---:|---:|---:|
+| Set-1 | 1000 | 250 | 1250 |
+| Set-2 | 800 | 200 | 1000 |
+| Set-3 | 586 | 146 | 732 |
+| Total | 2386 | 596 | 2982 |
 
 Implementation details:
 
@@ -89,10 +99,12 @@ Implementation details:
 
 Generated files:
 
-- `dataset/set1.csv`
-- `dataset/set2.csv`
-- `dataset/set3.csv`
-- `dataset/test.csv`
+- `dataset/Set-1/set-1_train_data.csv`
+- `dataset/Set-1/set-1_test_data.csv`
+- `dataset/Set-2/set-2_train_data.csv`
+- `dataset/Set-2/set-2_test_data.csv`
+- `dataset/Set-3/set-3_train_data.csv`
+- `dataset/Set-3/set-3_test_data.csv`
 
 Command:
 
@@ -106,7 +118,7 @@ python -m shared.data_split
 
 - Service: `main_server.app.services.training`
 - Algorithm: `RandomForestClassifier(n_estimators=100, random_state=42)`
-- Training data: `set1.csv`
+- Training data: `dataset/Set-1/set-1_train_data.csv`
 - Artifact output: `main_server/app/models/model.pkl`
 
 Command:
@@ -121,8 +133,8 @@ Each hospital:
 
 1. Loads latest available global model (`main_model_v2.pkl`), or falls back to base model (`model.pkl`)
 2. Retrains locally using:
-	 - Hospital-1 -> `set2.csv`
-	 - Hospital-2 -> `set3.csv`
+	 - Hospital-1 -> `dataset/Set-2/set-2_train_data.csv`
+	 - Hospital-2 -> `dataset/Set-3/set-3_train_data.csv`
 3. Saves local artifact:
 	 - `hospital_1/app/models/hospital_model.pkl`
 	 - `hospital_2/app/models/hospital_model.pkl`
@@ -140,7 +152,10 @@ Each hospital:
 ### 4.4 Evaluation
 
 - Service: `main_server.app.services.evaluation`
-- Dataset: `test.csv`
+- Dataset: combined test splits
+	 - `dataset/Set-1/set-1_test_data.csv`
+	 - `dataset/Set-2/set-2_test_data.csv`
+	 - `dataset/Set-3/set-3_test_data.csv`
 - Metrics:
 	- Accuracy
 	- Precision
@@ -190,7 +205,7 @@ During `GET /aggregate`, main server performs:
 - `POST /deploy` -> Simulate deployment of latest central model to hospitals
 - `POST /retrain-hospitals` -> Trigger retraining on both hospitals
 - `GET /aggregate` -> Trigger federated retrain + model aggregation
-- `GET /evaluate` -> Evaluate current global model
+- `GET /evaluate` -> Evaluate current global model on all three test splits
 - `POST /predict` -> Predict employability for provided records
 
 Sample `POST /predict` payload:
@@ -256,7 +271,9 @@ uvicorn main_server.app.main:app --host 0.0.0.0 --port 8000
 ### Trigger full flow
 
 ```bash
-curl -X POST http://localhost:8000/train
+curl -X POST http://localhost:8000/train -H "Content-Type: application/json" -d '{"dataset":"set1"}'
+curl -X POST http://localhost:8001/retrain -H "Content-Type: application/json" -d '{"dataset":"set2","retrain_from_main":true}'
+curl -X POST http://localhost:8002/retrain -H "Content-Type: application/json" -d '{"dataset":"set3","retrain_from_main":true}'
 curl http://localhost:8000/aggregate
 curl http://localhost:8000/evaluate
 ```
