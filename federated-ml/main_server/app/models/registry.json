@@ -1,7 +1,7 @@
 {
   "families": {
     "main_model": {
-      "active": "main_model_v1",
+      "active": "main_model_v4",
       "versions": [
         {
           "version": 1,
@@ -12,6 +12,96 @@
           "metadata": {
             "dataset": "set1",
             "mode": "main_train"
+          }
+        },
+        {
+          "version": 2,
+          "version_name": "main_model_v2",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v2.pkl",
+          "created_utc": "2026-03-23T04:23:56.031684+00:00",
+          "size_bytes": 1609065,
+          "metadata": {
+            "dataset": "set1",
+            "mode": "main_train"
+          }
+        },
+        {
+          "version": 3,
+          "version_name": "main_model_v3",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v3.pkl",
+          "created_utc": "2026-03-23T04:24:50.043651+00:00",
+          "size_bytes": 1609065,
+          "metadata": {
+            "dataset": "set1",
+            "mode": "main_train"
+          }
+        },
+        {
+          "version": 4,
+          "version_name": "main_model_v4",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v4.pkl",
+          "created_utc": "2026-03-23T04:28:03.384797+00:00",
+          "size_bytes": 1751305,
+          "metadata": {
+            "mode": "aggregate_distill",
+            "members": 3,
+            "contributors": [
+              {
+                "model_family": "main_model",
+                "version_name": "main_model_v3",
+                "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v3.pkl"
+              },
+              {
+                "model_family": "hospital_1_model",
+                "version_name": "hospital_1_model_v1",
+                "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_1_model\\hospital_1_model_v1.pkl"
+              },
+              {
+                "model_family": "hospital_2_model",
+                "version_name": "hospital_2_model_v1",
+                "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_2_model\\hospital_2_model_v1.pkl"
+              }
+            ],
+            "datasets": [
+              "set1",
+              "set2",
+              "set3"
+            ],
+            "rows": 2386
+          }
+        }
+      ]
+    },
+    "hospital_1_model": {
+      "active": "hospital_1_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "hospital_1_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_1_model\\hospital_1_model_v1.pkl",
+          "created_utc": "2026-03-23T04:27:20.773150+00:00",
+          "size_bytes": 1612281,
+          "metadata": {
+            "source_server": "hospital_1",
+            "target_server": "main",
+            "upload_filename": "h1_active.pkl"
+          }
+        }
+      ]
+    },
+    "hospital_2_model": {
+      "active": "hospital_2_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "hospital_2_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_2_model\\hospital_2_model_v1.pkl",
+          "created_utc": "2026-03-23T04:27:21.059445+00:00",
+          "size_bytes": 1459801,
+          "metadata": {
+            "source_server": "hospital_2",
+            "target_server": "main",
+            "upload_filename": "h2_active.pkl"
           }
         }
       ]

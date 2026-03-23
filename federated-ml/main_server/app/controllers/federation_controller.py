@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from main_server.app.services.evaluation import evaluate_global_model
+from main_server.app.services.evaluation import evaluate_main_model
 from main_server.app.services.inference import predict_records
 from main_server.app.services.orchestration import (
     aggregate_pipeline,
@@ -47,7 +47,7 @@ def aggregate_model() -> dict[str, object]:
     return aggregate_pipeline()
 
 
-def deploy_model() -> dict[str, str]:
+def deploy_model() -> dict[str, object]:
     return deploy_to_hospitals()
 
 
@@ -56,7 +56,7 @@ def retrain_remote_models(targets: list[str], dataset: str = "set2") -> dict[str
 
 
 def evaluate_model(dataset: str = "all") -> dict[str, object]:
-    result = evaluate_global_model(dataset=dataset)
+    result = evaluate_main_model(dataset=dataset)
     cache_latest_evaluation(result)
     trigger_status_refresh(force=True)
     return result

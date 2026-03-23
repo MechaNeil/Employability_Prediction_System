@@ -868,7 +868,7 @@
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-play"></i></span>Train Main Model</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Hospital Push Workflow</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>Aggregate Models</div>
-            <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Global</button>
+            <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Main</button>
             <div class="group-title">Hospital Dashboards</div>
             <button class="nav-item nav-button" onclick="openHospitalDashboard(1)"><span class="nav-icon"><i class="fa-solid fa-hospital"></i></span>Hospital-1 Dashboard</button>
             <button class="nav-item nav-button" onclick="openHospitalDashboard(2)"><span class="nav-icon"><i class="fa-solid fa-hospital-user"></i></span>Hospital-2 Dashboard</button>
@@ -941,9 +941,9 @@
                   <div class="model-id">
                     <span class="model-icon orange"><i class="fa-solid fa-earth-americas"></i></span>
                     <div>
-                      <h4 class="model-name">Global Model</h4>
+                      <h4 class="model-name">Aggregated Main</h4>
                       <div class="model-meta">
-                        <p class="model-sub">Global Accuracy</p>
+                        <p class="model-sub">Aggregated Accuracy</p>
                         <span id="globalVersion" class="model-version missing">No version</span>
                       </div>
                     </div>
@@ -981,8 +981,8 @@
                       <div class="action-sub">Use selected main dataset</div>
                     </button>
                     <button class="action a2" id="btnDeploy" onclick="runAction('deploy')">
-                      <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Push To Hospitals (Disabled)</div>
-                      <div class="action-sub">Hospitals now deploy/upload to main</div>
+                      <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Push Main To Hospitals</div>
+                      <div class="action-sub">Distribute active main model as hospital base</div>
                     </button>
                   </div>
                 </article>
@@ -1014,15 +1014,15 @@
                   </div>
                   <div class="actions retrain-actions">
                     <button class="action a3" id="btnRetrain" onclick="runAction('retrain-hospitals')">
-                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining (Disabled)</div>
+                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining (Info)</div>
                       <div class="action-sub">Hospitals retrain locally from hospital dashboards</div>
                     </button>
                     <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
                       <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
-                      <div class="action-sub">Build next global model version</div>
+                      <div class="action-sub">Update next main model version from hospital uploads</div>
                     </button>
                     <button class="action a5" id="btnEvaluate" onclick="runAction('evaluate')">
-                      <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Global</div>
+                      <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Main</div>
                       <div class="action-sub">Test on holdout set</div>
                     </button>
                   </div>
@@ -1053,7 +1053,7 @@
                   <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployment</div><div class="step-sub" id="stepDeploySub">Deployment status <span id="stepDeployState" class="status-inline pending">pending</span></div></div>
                   <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital"></i>Hospital-1 Model</div><div class="step-sub" id="stepH1Sub">Hospital-1 connection <span id="stepH1State" class="status-inline pending">pending</span></div></div>
                   <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-hospital-user"></i>Hospital-2 Model</div><div class="step-sub" id="stepH2Sub">Hospital-2 connection <span id="stepH2State" class="status-inline pending">pending</span></div></div>
-                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Global Model</div><div class="step-sub" id="stepGlobalSub">Global model status <span id="stepGlobalState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepGlobal" class="step pending"><div class="step-title"><i class="fa-solid fa-earth-americas"></i>Aggregated Main</div><div class="step-sub" id="stepGlobalSub">Aggregation status <span id="stepGlobalState" class="status-inline pending">pending</span></div></div>
                 </div>
 
               </div>
@@ -1073,14 +1073,14 @@
                   </select>
                   <button class="eval-btn active" id="evalModeBar" onclick="setEvaluationMode('bar')"><i class="fa-solid fa-chart-column"></i> Grouped Bars</button>
                   <button class="eval-btn" id="evalModeRadar" onclick="setEvaluationMode('radar')"><i class="fa-solid fa-bullseye"></i> Radar</button>
-                  <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Global Eval</button>
+                  <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Main Eval</button>
                 </div>
               </div>
               <div class="eval-guide">
                 <strong>How to run and read evaluation</strong>
                 <ol class="eval-steps">
                   <li>Select a test dataset (or use all test sets).</li>
-                  <li>Click Run Global Eval to evaluate the latest global model.</li>
+                  <li>Click Run Main Eval to evaluate the latest main model.</li>
                   <li>Switch between Grouped Bars and Radar for easier comparison.</li>
                   <li>Use the metric cards to review Accuracy, Precision, Recall, and F1.</li>
                 </ol>
@@ -1122,7 +1122,6 @@
                   <label class="control-label" for="uploadFamily">Model Family</label>
                   <select id="uploadFamily" class="control-input">
                     <option value="main_model" selected>Main Model</option>
-                    <option value="global_model">Global Model</option>
                     <option value="hospital_1_model">Hospital-1 Model</option>
                     <option value="hospital_2_model">Hospital-2 Model</option>
                   </select>
@@ -1148,7 +1147,6 @@
                   <label class="control-label" for="deleteFamily">Model Family</label>
                   <select id="deleteFamily" class="control-input" onchange="populateDeleteVersionSelect()">
                     <option value="main_model">Main Model</option>
-                    <option value="global_model">Global Model</option>
                     <option value="hospital_1_model">Hospital-1 Model</option>
                     <option value="hospital_2_model">Hospital-2 Model</option>
                   </select>
@@ -1192,7 +1190,6 @@
                   <input id="cmpLabel1" class="control-input" value="Candidate A" />
                   <select id="cmpFamily1" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(1)">
                     <option value="main_model">Main Model</option>
-                    <option value="global_model">Global Model</option>
                     <option value="hospital_1_model">Hospital-1 Model</option>
                     <option value="hospital_2_model">Hospital-2 Model</option>
                   </select>
@@ -1203,7 +1200,6 @@
                   <input id="cmpLabel2" class="control-input" value="Candidate B" />
                   <select id="cmpFamily2" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(2)">
                     <option value="main_model">Main Model</option>
-                    <option value="global_model">Global Model</option>
                     <option value="hospital_1_model">Hospital-1 Model</option>
                     <option value="hospital_2_model">Hospital-2 Model</option>
                   </select>
@@ -1214,7 +1210,6 @@
                   <input id="cmpLabel3" class="control-input" value="Candidate C" />
                   <select id="cmpFamily3" class="control-input" style="margin-top:6px;" onchange="populateVersionSelect(3)">
                     <option value="main_model">Main Model</option>
-                    <option value="global_model">Global Model</option>
                     <option value="hospital_1_model">Hospital-1 Model</option>
                     <option value="hospital_2_model">Hospital-2 Model</option>
                   </select>
@@ -1246,7 +1241,7 @@
             main: { label: 'Main Model', border: '#2f66ff', fill: 'rgba(47, 102, 255, 0.20)' },
             hospital_1: { label: 'Hospital-1', border: '#10a86d', fill: 'rgba(16, 168, 109, 0.20)' },
             hospital_2: { label: 'Hospital-2', border: '#7a39d8', fill: 'rgba(122, 57, 216, 0.20)' },
-            global: { label: 'Global Model', border: '#f28a1b', fill: 'rgba(242, 138, 27, 0.22)' },
+            aggregated_main: { label: 'Aggregated Main', border: '#f28a1b', fill: 'rgba(242, 138, 27, 0.22)' },
           };
           const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1 Score'];
           let isActionInFlight = false;
@@ -1343,7 +1338,7 @@
             setModelVersionChip('mainVersion', extractActiveVersion(registry, 'main_model'));
             setModelVersionChip('h1Version', extractActiveVersion(registry, 'hospital_1_model'));
             setModelVersionChip('h2Version', extractActiveVersion(registry, 'hospital_2_model'));
-            setModelVersionChip('globalVersion', extractActiveVersion(registry, 'global_model'));
+            setModelVersionChip('globalVersion', extractActiveVersion(registry, 'main_model'));
           }
 
           function setWorkflowState(text, kind, progress, detail, indeterminate = false) {
@@ -1397,13 +1392,13 @@
             return (value * 100).toFixed(1);
           }
 
-          function renderBars(main, h1, h2, global) {
+          function renderBars(main, h1, h2, aggregatedMain) {
             const chart = document.getElementById('chart');
             const values = [
               { key: 'Main Model', value: main, color: 'blue' },
               { key: 'Hospital-1', value: h1, color: 'green' },
               { key: 'Hospital-2', value: h2, color: 'purple' },
-              { key: 'Global Model v2', value: global, color: 'orange' },
+              { key: 'Aggregated Main', value: aggregatedMain, color: 'orange' },
             ];
 
             chart.innerHTML = values
@@ -1432,7 +1427,7 @@
           function normalizeModelMetrics(status) {
             const comparison = status.comparison || {};
             const modelMetrics = status.model_metrics || {};
-            const globalMetrics = status.metrics || {};
+            const mainMetrics = status.metrics?.metrics || {};
 
             const fromBundle = (bundle) => {
               if (!bundle || typeof bundle !== 'object') {
@@ -1449,27 +1444,27 @@
             const main = fromBundle(modelMetrics.main);
             const h1 = fromBundle(modelMetrics.hospital_1);
             const h2 = fromBundle(modelMetrics.hospital_2);
-            const global = fromBundle(modelMetrics.global);
+            const aggregatedMain = fromBundle(modelMetrics.aggregated_main);
 
             if (main[0] === null) main[0] = metricToPercent(comparison.main);
             if (h1[0] === null) h1[0] = metricToPercent(comparison.hospital_1);
             if (h2[0] === null) h2[0] = metricToPercent(comparison.hospital_2);
-            if (global[0] === null) global[0] = metricToPercent(comparison.global);
+            if (aggregatedMain[0] === null) aggregatedMain[0] = metricToPercent(comparison.aggregated_main);
 
-            if (global[1] === null) global[1] = metricToPercent(globalMetrics.precision);
-            if (global[2] === null) global[2] = metricToPercent(globalMetrics.recall);
-            if (global[3] === null) global[3] = metricToPercent(globalMetrics.f1);
+            if (aggregatedMain[1] === null) aggregatedMain[1] = metricToPercent(mainMetrics.precision);
+            if (aggregatedMain[2] === null) aggregatedMain[2] = metricToPercent(mainMetrics.recall);
+            if (aggregatedMain[3] === null) aggregatedMain[3] = metricToPercent(mainMetrics.f1);
 
             return {
               main,
               hospital_1: h1,
               hospital_2: h2,
-              global,
+              aggregated_main: aggregatedMain,
             };
           }
 
           function buildEvaluationDatasets(metricsByModel) {
-            const order = ['main', 'hospital_1', 'hospital_2', 'global'];
+            const order = ['main', 'hospital_1', 'hospital_2', 'aggregated_main'];
             return order.map((key) => ({
               key,
               label: modelColors[key].label,
@@ -1619,16 +1614,16 @@
 
           function actionText(action) {
             if (action === 'train') return 'Training main model';
-            if (action === 'deploy') return 'Checking push-to-hospitals status';
+            if (action === 'deploy') return 'Pushing main model to hospitals';
             if (action === 'retrain-hospitals') return 'Checking retrain endpoint status';
             if (action === 'aggregate') return 'Aggregating local models';
-            if (action === 'evaluate') return 'Evaluating global model';
+            if (action === 'evaluate') return 'Evaluating main model';
             return 'Processing action';
           }
 
           function completionText(action) {
             if (action === 'train') return 'Main Model Training Complete';
-            if (action === 'deploy') return 'Push To Hospitals Disabled';
+            if (action === 'deploy') return 'Main Model Pushed';
             if (action === 'retrain-hospitals') return 'Retrain Trigger Disabled';
             if (action === 'aggregate') return 'Aggregation Complete';
             if (action === 'evaluate') return 'Evaluation Complete';
@@ -1641,10 +1636,10 @@
 
           function completionDetail(action) {
             if (action === 'train') return 'Main model training finished successfully.';
-            if (action === 'deploy') return 'Main no longer pushes models. Hospitals deploy/upload explicitly.';
+            if (action === 'deploy') return 'Main model was pushed to hospital servers.';
             if (action === 'retrain-hospitals') return 'Main no longer triggers retraining. Hospitals retrain locally.';
-            if (action === 'aggregate') return 'Global model aggregation completed successfully.';
-            if (action === 'evaluate') return 'Global model evaluation completed successfully.';
+            if (action === 'aggregate') return 'Main model was updated from federated aggregation.';
+            if (action === 'evaluate') return 'Main model evaluation completed successfully.';
             if (action === 'upload-forward') return 'Model upload and forwarding completed successfully.';
             if (action === 'delete-version') return 'Selected model version was deleted.';
             if (action === 'delete-family') return 'Selected model family and all versions were deleted.';
@@ -1664,8 +1659,8 @@
             const h1 = status.hospitals?.hospital_1?.online === true;
             const h2 = status.hospitals?.hospital_2?.online === true;
             const mainReady = status.models?.base_model?.exists === true;
-            const globalReady = status.models?.global_model?.exists === true;
             const cmp = status.comparison || {};
+            const globalReady = cmp.aggregated_main !== null && cmp.aggregated_main !== undefined;
             const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
             const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
 
@@ -1717,7 +1712,7 @@
               const detail = `${waitingHospitals.join(' and ')} ${isPlural ? 'have' : 'has'} not uploaded deployed model versions to main server yet.`;
               setWorkflowState('Waiting For Hospital Deployment', 'warn', Math.max(progress, 30), detail);
             } else if (globalReady) {
-              setWorkflowState('Workflow Healthy', 'good', 100, 'Main, local, and global models are available.');
+              setWorkflowState('Workflow Healthy', 'good', 100, 'Main and hospital models are synchronized for federation.');
             } else if (mainReady) {
               setWorkflowState('Ready To Aggregate', 'warn', Math.max(progress, 40), 'Main model and uploaded hospital models are ready. Run aggregation.');
             } else {
@@ -1736,15 +1731,15 @@
               const h1 = status.hospitals?.hospital_1?.online === true;
               const h2 = status.hospitals?.hospital_2?.online === true;
               const mainReady = status.models?.base_model?.exists === true;
-              const globalReady = status.models?.global_model?.exists === true;
               const cmp = status.comparison || {};
+              const globalReady = cmp.aggregated_main !== null && cmp.aggregated_main !== undefined;
               const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
               const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
 
               const mainPct = toPercent(cmp.main);
               const h1Pct = toPercent(cmp.hospital_1);
               const h2Pct = toPercent(cmp.hospital_2);
-              const globalPct = toPercent(cmp.global);
+              const globalPct = toPercent(cmp.aggregated_main);
 
               document.getElementById('mainAcc').textContent = mainPct ? `${mainPct}%` : '-';
               document.getElementById('h1Acc').textContent = h1Pct ? `${h1Pct}%` : '-';
@@ -1775,7 +1770,7 @@
               }
 
               const readyModels = Object.values(latestModelMetrics).filter((metrics) => metrics.every((m) => m !== null)).length;
-              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/4 models have complete metrics.`;
+              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/4 model slots have complete metrics.`;
 
               updateWorkflowFromStatus(status);
 
@@ -1792,7 +1787,7 @@
                 if (h1Changed) writeLog(`Hospital-1 is now ${h1 ? 'online' : 'offline'}.`, h1 ? 'success' : 'error');
                 if (h2Changed) writeLog(`Hospital-2 is now ${h2 ? 'online' : 'offline'}.`, h2 ? 'success' : 'error');
                 if (mainChanged) writeLog(`Main model status changed to ${mainReady ? 'ready' : 'missing'}.`, mainReady ? 'success' : 'warn');
-                if (globalChanged) writeLog(`Global model status changed to ${globalReady ? 'ready' : 'pending'}.`, globalReady ? 'success' : 'warn');
+                if (globalChanged) writeLog(`Aggregated main status changed to ${globalReady ? 'ready' : 'pending'}.`, globalReady ? 'success' : 'warn');
               }
               lastSnapshot = { h1, h2, mainReady, globalReady };
 

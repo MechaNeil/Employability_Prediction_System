@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from main_server.app.core.config import BASE_MODEL_PATH, GLOBAL_MODEL_PATH, MODELS_DIR
+from main_server.app.core.config import BASE_MODEL_PATH, MODELS_DIR
 from shared.model_registry import (
     VersionEntry,
     get_active_version,
@@ -26,22 +26,9 @@ def bootstrap_registry() -> None:
             metadata={"source": "legacy_bootstrap", "dataset": "set1"},
         )
 
-    global_active = get_active_version(MODELS_DIR, "global_model")
-    if global_active is None and GLOBAL_MODEL_PATH.exists():
-        register_model_artifact(
-            MODELS_DIR,
-            "global_model",
-            GLOBAL_MODEL_PATH,
-            metadata={"source": "legacy_bootstrap"},
-        )
-
 
 def register_main_model(path: Path, metadata: dict[str, Any]) -> VersionEntry:
     return register_model_artifact(MODELS_DIR, "main_model", path, metadata=metadata)
-
-
-def register_global_model(path: Path, metadata: dict[str, Any]) -> VersionEntry:
-    return register_model_artifact(MODELS_DIR, "global_model", path, metadata=metadata)
 
 
 def register_remote_model(model_family: str, path: Path, metadata: dict[str, Any]) -> VersionEntry:
@@ -51,7 +38,6 @@ def register_remote_model(model_family: str, path: Path, metadata: dict[str, Any
 def _family_alias_files(model_family: str) -> list[Path]:
     aliases: dict[str, list[Path]] = {
         "main_model": [BASE_MODEL_PATH],
-        "global_model": [GLOBAL_MODEL_PATH],
     }
     return aliases.get(model_family, [])
 

@@ -16,3 +16,7 @@ class ActivateVersionRequest(BaseModel):
 
 class DeployRequest(BaseModel):
     version_name: str | None = None
+
+
+class DeleteVersionRequest(BaseModel):
+    version_name: str

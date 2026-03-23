@@ -54,7 +54,7 @@ def aggregate() -> dict[str, object]:
 
 
 @router.post("/deploy")
-def deploy() -> dict[str, str]:
+def deploy() -> dict[str, object]:
     try:
         return federation_controller.deploy_model()
     except Exception as exc:  # noqa: BLE001

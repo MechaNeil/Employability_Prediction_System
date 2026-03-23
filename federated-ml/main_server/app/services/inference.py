@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import joblib
 import pandas as pd
 
-from main_server.app.core.config import BASE_MODEL_PATH, GLOBAL_MODEL_PATH
+from main_server.app.core.config import BASE_MODEL_PATH, MODELS_DIR
 from shared.constants import FEATURE_COLUMNS, INV_LABEL_MAP
+from shared.model_registry import get_active_version
 
 
 def _load_active_model():
-    model_path = GLOBAL_MODEL_PATH if GLOBAL_MODEL_PATH.exists() else BASE_MODEL_PATH
+    active = get_active_version(MODELS_DIR, "main_model")
+    model_path = BASE_MODEL_PATH if active is None else Path(str(active["path"]))
     if not model_path.exists():
         raise FileNotFoundError("No model available. Run /train first.")
     return joblib.load(model_path), str(model_path)

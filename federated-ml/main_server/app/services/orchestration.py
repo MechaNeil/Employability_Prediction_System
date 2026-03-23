@@ -15,7 +15,7 @@ from main_server.app.core.config import (
     REQUEST_TIMEOUT_SECONDS,
 )
 from main_server.app.services.aggregation import aggregate_models
-from main_server.app.services.evaluation import evaluate_global_model
+from main_server.app.services.evaluation import evaluate_main_model
 from shared.model_registry import get_active_version
 
 
@@ -54,17 +54,20 @@ def _load_uploaded_model(model_family: str):
 
 
 def aggregate_pipeline() -> dict[str, object]:
-    if not BASE_MODEL_PATH.exists():
+    main_entry = get_active_version(MODELS_DIR, "main_model")
+    main_path = Path(str(main_entry["path"])) if main_entry is not None else BASE_MODEL_PATH
+    if not main_path.exists():
         raise FileNotFoundError("Main model missing. Train main model first.")
 
     logger.info("event=aggregate_pipeline status=start")
 
-    main_model = joblib.load(BASE_MODEL_PATH)
+    main_model = joblib.load(main_path)
     models = [main_model]
     contributors = [
         {
             "model_family": "main_model",
-            "path": str(BASE_MODEL_PATH),
+            "version_name": main_entry["version_name"] if main_entry is not None else None,
+            "path": str(main_path),
         }
     ]
 
@@ -81,20 +84,23 @@ def aggregate_pipeline() -> dict[str, object]:
             "Hospitals must deploy/upload first."
         )
 
-    output_path = aggregate_models(models)
-    metrics = evaluate_global_model()
+    aggregate_result = aggregate_models(models, contributors)
+    metrics = evaluate_main_model()
     logger.info(
         "event=aggregate_pipeline status=complete output=%s members=%s metrics=%s",
-        output_path,
+        aggregate_result["model_path"],
         len(models),
         metrics,
     )
 
     return {
-        "message": "Aggregation complete.",
-        "global_model_path": output_path,
+        "message": "Aggregation complete. Main model updated.",
+        "main_model_path": aggregate_result["model_path"],
+        "active_version": aggregate_result["active_version"],
         "contributors": contributors,
         "member_count": len(models),
+        "rows": aggregate_result["rows"],
+        "datasets": aggregate_result["datasets"],
         "metrics": metrics,
     }
 
@@ -126,12 +132,51 @@ def retrain_hospitals(targets: list[str], dataset: str = "set2") -> dict[str, ob
     }
 
 
-def deploy_to_hospitals() -> dict[str, str]:
+def deploy_to_hospitals() -> dict[str, object]:
+    main_entry = get_active_version(MODELS_DIR, "main_model")
+    model_path = Path(str(main_entry["path"])) if main_entry is not None else BASE_MODEL_PATH
+    if not model_path.exists():
+        raise FileNotFoundError("No main model available to deploy. Train or aggregate first.")
+
+    results: dict[str, object] = {}
+    success_count = 0
+
+    for hospital_name, endpoint in TARGET_ENDPOINTS.items():
+        last_error: str | None = None
+        for _ in range(max(1, REQUEST_RETRIES)):
+            try:
+                with model_path.open("rb") as handle:
+                    files = {"model_file": (model_path.name, handle, "application/octet-stream")}
+                    response = requests.post(endpoint["upload"], files=files, timeout=REQUEST_TIMEOUT_SECONDS)
+                response.raise_for_status()
+                payload = response.json()
+                results[hospital_name] = {
+                    "ok": True,
+                    "endpoint": endpoint["upload"],
+                    "response": payload,
+                }
+                success_count += 1
+                last_error = None
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = str(exc)
+
+        if last_error is not None:
+            results[hospital_name] = {
+                "ok": False,
+                "endpoint": endpoint["upload"],
+                "error": last_error,
+            }
+
+    if success_count == 0:
+        raise RuntimeError("Deployment to hospitals failed for all targets.")
+
     return {
-        "message": (
-            "Push-to-hospital deployment is disabled. "
-            "Hospitals control training and deploy models to main_server explicitly."
-        ),
+        "message": "Main model pushed to hospitals.",
+        "source_version": main_entry["version_name"] if main_entry is not None else None,
+        "model_path": str(model_path),
+        "success_count": success_count,
+        "results": results,
     }
 
 

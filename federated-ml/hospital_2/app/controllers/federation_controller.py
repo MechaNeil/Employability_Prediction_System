@@ -1,5 +1,6 @@
 from hospital_2.app.services.deployment import deploy_model_to_main_server
 from hospital_2.app.services.evaluation import evaluate_active_model
+from hospital_2.app.services.model_registry import delete_local_family, delete_local_version
 from hospital_2.app.services.status import get_system_status
 from hospital_2.app.services.training import activate_model_version, train_or_retrain_model
 from hospital_2.app.views.dashboard_view import get_dashboard_html
@@ -31,3 +32,11 @@ def set_active_version(version_name: str) -> dict[str, object]:
 
 def deploy_to_main(version_name: str | None = None) -> dict[str, object]:
     return deploy_model_to_main_server(version_name)
+
+
+def delete_local_model_version(version_name: str) -> dict[str, object]:
+    return delete_local_version(version_name)
+
+
+def delete_local_model_family() -> dict[str, object]:
+    return delete_local_family()

@@ -1,19 +1,30 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import joblib
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
-from main_server.app.core.config import GLOBAL_MODEL_PATH
+from main_server.app.core.config import BASE_MODEL_PATH, MODELS_DIR
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
 from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
+from shared.model_registry import get_active_version
 
 
-def evaluate_global_model(dataset: str = "all") -> dict[str, object]:
-    if not GLOBAL_MODEL_PATH.exists():
-        raise FileNotFoundError("Global model does not exist. Run /aggregate first.")
+def _active_main_model_path() -> str:
+    active = get_active_version(MODELS_DIR, "main_model")
+    if active is not None:
+        return str(active["path"])
+    return str(BASE_MODEL_PATH)
 
-    model = joblib.load(GLOBAL_MODEL_PATH)
+
+def evaluate_main_model(dataset: str = "all") -> dict[str, object]:
+    model_path = _active_main_model_path()
+    if not Path(model_path).exists():
+        raise FileNotFoundError("Main model does not exist. Run /train first.")
+
+    model = joblib.load(model_path)
     dataset_key = dataset.strip().lower().replace("-", "")
     if dataset_key == "all":
         test_paths = get_all_test_dataset_paths()
@@ -42,3 +53,7 @@ def evaluate_global_model(dataset: str = "all") -> dict[str, object]:
         "rows_evaluated": int(len(df)),
         "metrics": metrics,
     }
+
+
+def evaluate_global_model(dataset: str = "all") -> dict[str, object]:
+    return evaluate_main_model(dataset=dataset)

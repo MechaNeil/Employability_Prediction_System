@@ -444,6 +444,8 @@
             <button class="btn b5" id="btnActivate" onclick="activateVersion()"><strong><i class="fa-solid fa-check"></i> Activate Selected</strong><span>Switch local active model</span></button>
             <button class="btn b4" id="btnDeploy" onclick="deployToMain()"><strong><i class="fa-solid fa-paper-plane"></i> Deploy To Main</strong><span>Send active local version</span></button>
             <button class="btn b4" onclick="downloadModel()"><strong><i class="fa-solid fa-download"></i> Download Active</strong><span>Download .pkl artifact</span></button>
+            <button class="btn b3" id="btnDeleteVersion" onclick="deleteSelectedVersion()"><strong><i class="fa-solid fa-file-circle-xmark"></i> Delete Selected</strong><span>Delete selected local version</span></button>
+            <button class="btn b4" id="btnDeleteFamily" onclick="deleteFamily()"><strong><i class="fa-solid fa-folder-minus"></i> Delete Local Family</strong><span>Delete all Hospital-2 local versions</span></button>
           </div>
 
           <div class="control-row" style="margin-top:8px;">
@@ -576,7 +578,7 @@
 
       function setBusy(isBusy) {
         state.busy = isBusy;
-        ['btnTrain', 'btnRetrain', 'btnEval', 'btnActivate', 'btnDeploy'].forEach((id) => {
+        ['btnTrain', 'btnRetrain', 'btnEval', 'btnActivate', 'btnDeploy', 'btnDeleteVersion', 'btnDeleteFamily'].forEach((id) => {
           const node = document.getElementById(id);
           if (node) node.disabled = isBusy;
         });
@@ -675,6 +677,49 @@
           await refreshAll();
         } catch (err) {
           log(`Upload failed: ${err.message}`, 'error');
+        }
+      }
+
+      async function deleteSelectedVersion() {
+        const versionName = document.getElementById('versionSelect').value;
+        if (!versionName) {
+          log('Delete skipped: choose a local version first.', 'warn');
+          return;
+        }
+
+        if (!window.confirm(`Delete local version ${versionName}? This cannot be undone.`)) {
+          log('Delete selected version cancelled.', 'warn');
+          return;
+        }
+
+        try {
+          setBusy(true);
+          const result = await api('POST', '/model/delete-version', { version_name: versionName });
+          log(`Deleted version ${result.version_name}`, 'success');
+          await refreshAll();
+        } catch (err) {
+          log(`Delete selected failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function deleteFamily() {
+        if (!window.confirm('Delete all Hospital-2 local model versions? This cannot be undone.')) {
+          log('Delete local family cancelled.', 'warn');
+          return;
+        }
+
+        try {
+          setBusy(true);
+          await api('POST', '/model/delete-family');
+          log('Deleted Hospital-2 local model family.', 'success');
+          document.getElementById('deployStatusCard').textContent = 'Idle';
+          await refreshAll();
+        } catch (err) {
+          log(`Delete family failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
         }
       }
 

@@ -16,12 +16,11 @@ from sklearn.metrics import recall_score
 
 from main_server.app.core.config import (
     BASE_MODEL_PATH,
-    GLOBAL_MODEL_PATH,
     HOSPITAL_1_HEALTH_URL,
     HOSPITAL_2_HEALTH_URL,
     MODELS_DIR,
 )
-from main_server.app.services.evaluation import evaluate_global_model
+from main_server.app.services.evaluation import evaluate_main_model
 from main_server.app.services.model_registry import get_registry_overview
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
 from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
@@ -33,7 +32,7 @@ def _default_comparison() -> dict[str, float | None]:
         "main": None,
         "hospital_1": None,
         "hospital_2": None,
-        "global": None,
+        "aggregated_main": None,
     }
 
 
@@ -42,7 +41,7 @@ def _default_model_metrics() -> dict[str, dict[str, float] | None]:
         "main": None,
         "hospital_1": None,
         "hospital_2": None,
-        "global": None,
+        "aggregated_main": None,
     }
 
 
@@ -94,7 +93,6 @@ def _service_health(url: str) -> dict[str, object]:
 def get_model_versions() -> dict[str, object]:
     return {
         "base_model": _model_info(BASE_MODEL_PATH),
-        "global_model": _model_info(GLOBAL_MODEL_PATH),
         "registry": get_registry_overview(),
     }
 
@@ -162,15 +160,16 @@ def _load_hospital_model(model_family: str):
 
 
 def get_performance_comparison() -> dict[str, float | None]:
-    base_accuracy: float | None = None
-    if BASE_MODEL_PATH.exists():
-        base_model = joblib.load(BASE_MODEL_PATH)
-        base_accuracy = _safe_accuracy(base_model)
+    active_main = get_active_version(MODELS_DIR, "main_model")
+    main_model = None
+    if active_main is not None:
+        active_path = Path(str(active_main["path"]))
+        if active_path.exists():
+            main_model = joblib.load(active_path)
+    elif BASE_MODEL_PATH.exists():
+        main_model = joblib.load(BASE_MODEL_PATH)
 
-    global_accuracy: float | None = None
-    if GLOBAL_MODEL_PATH.exists():
-        global_model = joblib.load(GLOBAL_MODEL_PATH)
-        global_accuracy = _safe_accuracy(global_model)
+    base_accuracy = _safe_accuracy(main_model) if main_model is not None else None
 
     h1_model = _load_hospital_model("hospital_1_model")
     h2_model = _load_hospital_model("hospital_2_model")
@@ -181,27 +180,36 @@ def get_performance_comparison() -> dict[str, float | None]:
         "main": base_accuracy,
         "hospital_1": h1_accuracy,
         "hospital_2": h2_accuracy,
-        "global": global_accuracy,
+        "aggregated_main": base_accuracy,
     }
 
 
 def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
-    base_model = joblib.load(BASE_MODEL_PATH) if BASE_MODEL_PATH.exists() else None
-    global_model = joblib.load(GLOBAL_MODEL_PATH) if GLOBAL_MODEL_PATH.exists() else None
+    active_main = get_active_version(MODELS_DIR, "main_model")
+    base_model = None
+    if active_main is not None:
+        active_path = Path(str(active_main["path"]))
+        if active_path.exists():
+            base_model = joblib.load(active_path)
+    elif BASE_MODEL_PATH.exists():
+        base_model = joblib.load(BASE_MODEL_PATH)
+
     h1_model = _load_hospital_model("hospital_1_model")
     h2_model = _load_hospital_model("hospital_2_model")
 
+    main_bundle = _safe_metric_bundle(base_model)
+
     return {
-        "main": _safe_metric_bundle(base_model),
+        "main": main_bundle,
         "hospital_1": _safe_metric_bundle(h1_model),
         "hospital_2": _safe_metric_bundle(h2_model),
-        "global": _safe_metric_bundle(global_model),
+        "aggregated_main": main_bundle,
     }
 
 
 def _compute_expensive_snapshot() -> dict[str, Any]:
     try:
-        metrics: dict[str, object] = evaluate_global_model()
+        metrics: dict[str, object] = evaluate_main_model()
     except Exception as exc:  # noqa: BLE001
         metrics = {"available": False, "reason": str(exc)}
 

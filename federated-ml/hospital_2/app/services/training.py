@@ -10,10 +10,11 @@ from hospital_2.app.core.config import LEGACY_MODEL_PATH, MODELS_DIR
 from hospital_2.app.services.model_registry import activate, get_active, initialize_registry, register_version
 from shared.constants import FEATURE_COLUMNS, RANDOM_STATE, TARGET_COLUMN
 from shared.datasets import get_dataset_path, normalize_dataset_key
+from shared.model_registry import get_active_version
 
 ROOT = Path(__file__).resolve().parents[3]
 LOCAL_MODEL_PATH = LEGACY_MODEL_PATH
-MAIN_MODEL_V2 = ROOT / "main_server" / "app" / "models" / "main_model_v2.pkl"
+MAIN_MODELS_DIR = ROOT / "main_server" / "app" / "models"
 MAIN_MODEL_V1 = ROOT / "main_server" / "app" / "models" / "model.pkl"
 
 
@@ -29,7 +30,12 @@ def _fit_fresh_model(dataset_key: str):
 
 
 def _load_source_model_or_none():
-    source_model_path = MAIN_MODEL_V2 if MAIN_MODEL_V2.exists() else MAIN_MODEL_V1
+    active_main = get_active_version(MAIN_MODELS_DIR, "main_model")
+    if active_main is not None:
+        source_model_path = Path(str(active_main["path"]))
+    else:
+        source_model_path = MAIN_MODEL_V1
+
     if not source_model_path.exists():
         return None
     return joblib.load(source_model_path)

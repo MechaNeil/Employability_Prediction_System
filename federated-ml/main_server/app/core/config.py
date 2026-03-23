@@ -8,7 +8,7 @@ MODELS_DIR = MAIN_SERVER_ROOT / "app" / "models"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 BASE_MODEL_PATH = MODELS_DIR / "model.pkl"
-GLOBAL_MODEL_PATH = MODELS_DIR / "main_model_v2.pkl"
+AGGREGATION_DATASETS = ("set1", "set2", "set3")
 
 HOSPITAL_1_RETRAIN_URL = "http://localhost:8001/retrain"
 HOSPITAL_1_MODEL_URL = "http://localhost:8001/model"

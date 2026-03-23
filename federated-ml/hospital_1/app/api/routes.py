@@ -3,7 +3,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 
 from hospital_1.app.controllers import federation_controller
-from hospital_1.app.models.schemas import ActivateVersionRequest, DeployRequest, EvaluateRequest, TrainRequest
+from hospital_1.app.models.schemas import (
+    ActivateVersionRequest,
+    DeleteVersionRequest,
+    DeployRequest,
+    EvaluateRequest,
+    TrainRequest,
+)
 from hospital_1.app.services.model_registry import get_active, get_versions
 from hospital_1.app.services.status import get_training_set_comparison
 from hospital_1.app.views.model_view import get_model_file, upload_model_file
@@ -96,5 +102,25 @@ def activate_model(payload: ActivateVersionRequest) -> dict[str, object]:
 def deploy_to_main(payload: DeployRequest) -> dict[str, object]:
     try:
         return federation_controller.deploy_to_main(payload.version_name)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/model/delete-version")
+def delete_model_version(payload: DeleteVersionRequest) -> dict[str, object]:
+    try:
+        return federation_controller.delete_local_model_version(payload.version_name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/model/delete-family")
+def delete_model_family() -> dict[str, object]:
+    try:
+        return federation_controller.delete_local_model_family()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
