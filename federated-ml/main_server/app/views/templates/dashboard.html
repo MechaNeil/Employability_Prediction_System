@@ -607,10 +607,6 @@
             color: #fff;
           }
 
-          .eval-controls .fa-spinner {
-            display: none !important;
-          }
-
           .eval-canvas-wrap {
             margin-top: 10px;
             border: 1px solid var(--line);
@@ -1186,6 +1182,16 @@
             writeLog(titles[action] || `Placeholder clicked: ${action}`, 'warn');
           }
 
+          function scrollToEvaluationPanel() {
+            const panel = document.getElementById('evaluationPanel');
+            if (!panel) return;
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+
+          function openEvaluationPanel() {
+            scrollToEvaluationPanel();
+          }
+
           function getSelectedRetrainTargets() {
             const selected = Array.from(document.querySelectorAll('.retrain-target:checked')).map((node) => node.value);
             if (selected.length === 0) {
@@ -1598,6 +1604,9 @@
 
           async function runAction(action) {
             try {
+              if (action === 'evaluate') {
+                scrollToEvaluationPanel();
+              }
               isActionInFlight = true;
               setButtonsBusy(true);
               setWorkflowState('Workflow Processing', 'processing', 35, `${actionText(action)}...`, true);
