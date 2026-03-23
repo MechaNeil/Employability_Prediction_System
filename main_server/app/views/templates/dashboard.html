@@ -980,7 +980,7 @@
                   <div class="control-row retrain-controls">
                     <div class="control-block">
                       <label class="control-label" for="retrainDataset">Retrain Dataset</label>
-                      <select id="retrainDataset" class="control-input">
+                      <select id="retrainDataset" class="control-input" disabled>
                         <option value="set1">Set-1</option>
                         <option value="set2" selected>Set-2</option>
                         <option value="set3">Set-3</option>
@@ -989,16 +989,16 @@
                     <div class="control-block wide">
                       <label class="control-label">Retrain Targets</label>
                       <div class="check-grid">
-                        <label><input type="checkbox" class="retrain-target" value="main" /> Main</label>
-                        <label><input type="checkbox" class="retrain-target" value="employability_1" checked /> Employability-1</label>
-                        <label><input type="checkbox" class="retrain-target" value="employability_2" checked /> Employability-2</label>
+                        <label><input type="checkbox" class="retrain-target" value="main" disabled /> Main</label>
+                        <label><input type="checkbox" class="retrain-target" value="employability_1" checked disabled /> Employability-1</label>
+                        <label><input type="checkbox" class="retrain-target" value="employability_2" checked disabled /> Employability-2</label>
                       </div>
                     </div>
                   </div>
                   <div class="actions retrain-actions">
-                    <button class="action a3" id="btnRetrain" onclick="runAction('retrain-employabilitys')">
-                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining (Info)</div>
-                      <div class="action-sub">Employabilitys retrain locally from employability dashboards</div>
+                    <button class="action a3" id="btnRetrain" disabled>
+                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Retraining Temporarily Disabled</div>
+                      <div class="action-sub">This action is disabled for now.</div>
                     </button>
                     <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
                       <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
@@ -1827,6 +1827,11 @@
           }
 
           async function runAction(action) {
+            if (action === 'retrain-employabilitys') {
+              writeLog('Retrain action is temporarily disabled.', 'warn');
+              return;
+            }
+
             try {
               isActionInFlight = true;
               setButtonsBusy(true);
