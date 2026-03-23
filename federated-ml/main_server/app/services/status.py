@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -19,14 +18,14 @@ from main_server.app.core.config import (
     BASE_MODEL_PATH,
     GLOBAL_MODEL_PATH,
     HOSPITAL_1_HEALTH_URL,
-    HOSPITAL_1_MODEL_URL,
     HOSPITAL_2_HEALTH_URL,
-    HOSPITAL_2_MODEL_URL,
+    MODELS_DIR,
 )
 from main_server.app.services.evaluation import evaluate_global_model
 from main_server.app.services.model_registry import get_registry_overview
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
 from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
+from shared.model_registry import get_active_version
 
 
 def _default_comparison() -> dict[str, float | None]:
@@ -149,11 +148,15 @@ def _metric_bundle_for_dataset(model, dataset_key: str) -> dict[str, float] | No
         return None
 
 
-def _load_hospital_model(model_url: str):
+def _load_hospital_model(model_family: str):
     try:
-        response = requests.get(model_url, timeout=10)
-        response.raise_for_status()
-        return joblib.load(io.BytesIO(response.content))
+        active_version = get_active_version(MODELS_DIR, model_family)
+        if active_version is None:
+            return None
+        artifact_path = Path(str(active_version["path"]))
+        if not artifact_path.exists():
+            return None
+        return joblib.load(artifact_path)
     except Exception:  # noqa: BLE001
         return None
 
@@ -169,8 +172,8 @@ def get_performance_comparison() -> dict[str, float | None]:
         global_model = joblib.load(GLOBAL_MODEL_PATH)
         global_accuracy = _safe_accuracy(global_model)
 
-    h1_model = _load_hospital_model(HOSPITAL_1_MODEL_URL)
-    h2_model = _load_hospital_model(HOSPITAL_2_MODEL_URL)
+    h1_model = _load_hospital_model("hospital_1_model")
+    h2_model = _load_hospital_model("hospital_2_model")
     h1_accuracy = _safe_accuracy(h1_model) if h1_model is not None else None
     h2_accuracy = _safe_accuracy(h2_model) if h2_model is not None else None
 
@@ -185,8 +188,8 @@ def get_performance_comparison() -> dict[str, float | None]:
 def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
     base_model = joblib.load(BASE_MODEL_PATH) if BASE_MODEL_PATH.exists() else None
     global_model = joblib.load(GLOBAL_MODEL_PATH) if GLOBAL_MODEL_PATH.exists() else None
-    h1_model = _load_hospital_model(HOSPITAL_1_MODEL_URL)
-    h2_model = _load_hospital_model(HOSPITAL_2_MODEL_URL)
+    h1_model = _load_hospital_model("hospital_1_model")
+    h2_model = _load_hospital_model("hospital_2_model")
 
     return {
         "main": _safe_metric_bundle(base_model),

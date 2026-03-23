@@ -866,7 +866,7 @@
             <div class="nav-item active"><span class="nav-icon"><i class="fa-solid fa-table-cells-large"></i></span>Dashboard</div>
             <div class="group-title">Model Workflow</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-play"></i></span>Train Main Model</div>
-            <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Deploy to Hospitals</div>
+            <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Hospital Push Workflow</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>Aggregate Models</div>
             <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Global</button>
             <div class="group-title">Hospital Dashboards</div>
@@ -962,7 +962,7 @@
                   <div class="action-section-head">
                     <div>
                       <h4 class="action-section-title"><i class="fa-solid fa-brain"></i>Main Model Flow</h4>
-                      <p class="action-section-sub">Train and distribute the latest central model.</p>
+                      <p class="action-section-sub">Train central model artifacts and wait for hospital deployments.</p>
                     </div>
                   </div>
                   <div class="control-row train-controls">
@@ -981,8 +981,8 @@
                       <div class="action-sub">Use selected main dataset</div>
                     </button>
                     <button class="action a2" id="btnDeploy" onclick="runAction('deploy')">
-                      <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Deploy to Hospitals</div>
-                      <div class="action-sub">Send latest central model</div>
+                      <div class="action-title"><i class="fa-solid fa-paper-plane"></i>Push To Hospitals (Disabled)</div>
+                      <div class="action-sub">Hospitals now deploy/upload to main</div>
                     </button>
                   </div>
                 </article>
@@ -990,8 +990,8 @@
                 <article class="action-section retrain">
                   <div class="action-section-head">
                     <div>
-                      <h4 class="action-section-title"><i class="fa-solid fa-arrows-rotate"></i>Retrain And Consolidate</h4>
-                      <p class="action-section-sub">Run local retraining, aggregate updates, and evaluate global quality.</p>
+                      <h4 class="action-section-title"><i class="fa-solid fa-arrows-rotate"></i>Consolidate Uploaded Models</h4>
+                      <p class="action-section-sub">Retrain requests are disabled on main. Aggregate only uploaded hospital models.</p>
                     </div>
                   </div>
                   <div class="control-row retrain-controls">
@@ -1014,8 +1014,8 @@
                   </div>
                   <div class="actions retrain-actions">
                     <button class="action a3" id="btnRetrain" onclick="runAction('retrain-hospitals')">
-                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining</div>
-                      <div class="action-sub">Run selected targets and dataset</div>
+                      <div class="action-title"><i class="fa-solid fa-arrows-rotate"></i>Trigger Retraining (Disabled)</div>
+                      <div class="action-sub">Hospitals retrain locally from hospital dashboards</div>
                     </button>
                     <button class="action a4" id="btnAggregate" onclick="runAction('aggregate')">
                       <div class="action-title"><i class="fa-solid fa-layer-group"></i>Aggregate Models</div>
@@ -1619,8 +1619,8 @@
 
           function actionText(action) {
             if (action === 'train') return 'Training main model';
-            if (action === 'deploy') return 'Deploying model to hospitals';
-            if (action === 'retrain-hospitals') return 'Triggering remote retraining';
+            if (action === 'deploy') return 'Checking push-to-hospitals status';
+            if (action === 'retrain-hospitals') return 'Checking retrain endpoint status';
             if (action === 'aggregate') return 'Aggregating local models';
             if (action === 'evaluate') return 'Evaluating global model';
             return 'Processing action';
@@ -1628,8 +1628,8 @@
 
           function completionText(action) {
             if (action === 'train') return 'Main Model Training Complete';
-            if (action === 'deploy') return 'Deployment Complete';
-            if (action === 'retrain-hospitals') return 'Retraining Complete';
+            if (action === 'deploy') return 'Push To Hospitals Disabled';
+            if (action === 'retrain-hospitals') return 'Retrain Trigger Disabled';
             if (action === 'aggregate') return 'Aggregation Complete';
             if (action === 'evaluate') return 'Evaluation Complete';
             if (action === 'upload-forward') return 'Upload Forward Complete';
@@ -1641,8 +1641,8 @@
 
           function completionDetail(action) {
             if (action === 'train') return 'Main model training finished successfully.';
-            if (action === 'deploy') return 'Latest model deployed to available hospitals.';
-            if (action === 'retrain-hospitals') return 'Requested retraining job completed successfully.';
+            if (action === 'deploy') return 'Main no longer pushes models. Hospitals deploy/upload explicitly.';
+            if (action === 'retrain-hospitals') return 'Main no longer triggers retraining. Hospitals retrain locally.';
             if (action === 'aggregate') return 'Global model aggregation completed successfully.';
             if (action === 'evaluate') return 'Global model evaluation completed successfully.';
             if (action === 'upload-forward') return 'Model upload and forwarding completed successfully.';
@@ -1669,11 +1669,9 @@
             const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
             const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
 
-            const h1Fetching = h1 && !localModelH1;
-            const h2Fetching = h2 && !localModelH2;
-            const fetchingHospitals = [];
-            if (h1Fetching) fetchingHospitals.push('Hospital-1');
-            if (h2Fetching) fetchingHospitals.push('Hospital-2');
+            const waitingHospitals = [];
+            if (h1 && !localModelH1) waitingHospitals.push('Hospital-1');
+            if (h2 && !localModelH2) waitingHospitals.push('Hospital-2');
 
             setStep('stepMain', mainReady ? 'ok' : 'pending');
             setStep('stepDeploy', mainReady && h1 && h2 ? 'ok' : (mainReady ? 'pending' : 'bad'));
@@ -1683,8 +1681,16 @@
 
             setStepStatus('stepMainState', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
             setStepStatus('stepDeployState', mainReady && h1 && h2 ? 'ready' : 'pending', mainReady && h1 && h2 ? 'ready' : 'pending');
-            setStepStatus('stepH1State', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline', h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline');
-            setStepStatus('stepH2State', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline');
+            setStepStatus(
+              'stepH1State',
+              h1 ? (localModelH1 ? 'ready' : (mainReady ? 'waiting upload' : 'waiting base')) : 'offline',
+              h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline'
+            );
+            setStepStatus(
+              'stepH2State',
+              h2 ? (localModelH2 ? 'ready' : (mainReady ? 'waiting upload' : 'waiting base')) : 'offline',
+              h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline'
+            );
             setStepStatus('stepGlobalState', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
 
             const completed = [mainReady, mainReady && h1 && h2, localModelH1, localModelH2, globalReady].filter(Boolean).length;
@@ -1702,14 +1708,18 @@
               setWorkflowState('Offline Services', 'bad', progress, 'Both hospitals are offline. Start hospital services first.');
             } else if (!h1 || !h2) {
               setWorkflowState('Partial Connectivity', 'warn', progress, 'One hospital is offline. Workflow is degraded.');
-            } else if (fetchingHospitals.length > 0) {
-              const isPlural = fetchingHospitals.length > 1;
-              const detail = `${fetchingHospitals.join(' and ')} ${isPlural ? 'are' : 'is'} fetching latest model data.`;
-              setWorkflowState('Fetching Hospital Data', 'warn', Math.max(progress, 30), detail);
+            } else if (waitingHospitals.length > 0 && !mainReady) {
+              const isPlural = waitingHospitals.length > 1;
+              const detail = `${waitingHospitals.join(' and ')} ${isPlural ? 'are' : 'is'} waiting for base model training on main server.`;
+              setWorkflowState('Waiting For Base Model', 'warn', Math.max(progress, 20), detail);
+            } else if (waitingHospitals.length > 0) {
+              const isPlural = waitingHospitals.length > 1;
+              const detail = `${waitingHospitals.join(' and ')} ${isPlural ? 'have' : 'has'} not uploaded deployed model versions to main server yet.`;
+              setWorkflowState('Waiting For Hospital Deployment', 'warn', Math.max(progress, 30), detail);
             } else if (globalReady) {
               setWorkflowState('Workflow Healthy', 'good', 100, 'Main, local, and global models are available.');
             } else if (mainReady) {
-              setWorkflowState('Ready To Aggregate', 'warn', Math.max(progress, 40), 'Main model exists. Continue with retrain and aggregation.');
+              setWorkflowState('Ready To Aggregate', 'warn', Math.max(progress, 40), 'Main model and uploaded hospital models are ready. Run aggregation.');
             } else {
               setWorkflowState('Waiting For Training', 'warn', Math.max(progress, 10), 'Train the main model to start federation.');
             }
@@ -1742,8 +1752,8 @@
               document.getElementById('globalAcc').textContent = globalPct ? `${globalPct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
-              const h1TagText = !h1 ? 'Offline' : (localModelH1 ? 'Updated' : 'Fetching');
-              const h2TagText = !h2 ? 'Offline' : (localModelH2 ? 'Updated' : 'Fetching');
+              const h1TagText = !h1 ? 'Offline' : (localModelH1 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
+              const h2TagText = !h2 ? 'Offline' : (localModelH2 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
               setTag('h1Tag', h1TagText, localModelH1);
               setTag('h2Tag', h2TagText, localModelH2);
               setTag('globalTag', globalReady ? 'Aggregated' : 'Pending', globalReady);

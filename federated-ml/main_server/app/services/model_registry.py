@@ -204,30 +204,14 @@ def clear_model_artifacts() -> dict[str, object]:
 
 
 def get_registry_overview() -> dict[str, object]:
-    registry_file = MODELS_DIR / "registry.json"
-    if not registry_file.exists():
-        return {
-            "main_model": {"active": None, "versions": []},
-            "global_model": {"active": None, "versions": []},
-            "hospital_1_model": {"active": None, "versions": []},
-            "hospital_2_model": {"active": None, "versions": []},
+    registry = load_registry(MODELS_DIR)
+    family_names = sorted(registry.get("families", {}).keys())
+
+    overview: dict[str, object] = {}
+    for family_name in family_names:
+        overview[family_name] = {
+            "active": get_active_version(MODELS_DIR, family_name),
+            "versions": list_versions(MODELS_DIR, family_name),
         }
 
-    return {
-        "main_model": {
-            "active": get_active_version(MODELS_DIR, "main_model"),
-            "versions": list_versions(MODELS_DIR, "main_model"),
-        },
-        "global_model": {
-            "active": get_active_version(MODELS_DIR, "global_model"),
-            "versions": list_versions(MODELS_DIR, "global_model"),
-        },
-        "hospital_1_model": {
-            "active": get_active_version(MODELS_DIR, "hospital_1_model"),
-            "versions": list_versions(MODELS_DIR, "hospital_1_model"),
-        },
-        "hospital_2_model": {
-            "active": get_active_version(MODELS_DIR, "hospital_2_model"),
-            "versions": list_versions(MODELS_DIR, "hospital_2_model"),
-        },
-    }
+    return overview
