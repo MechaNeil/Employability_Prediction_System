@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from main_server.app.services.evaluation import evaluate_main_model
+from main_server.app.services.evaluation import evaluate_models
 from main_server.app.services.inference import predict_records
 from main_server.app.services.orchestration import (
     aggregate_pipeline,
@@ -55,8 +55,8 @@ def retrain_remote_models(targets: list[str], dataset: str = "set2") -> dict[str
     return retrain_employabilitys(targets=targets, dataset=dataset)
 
 
-def evaluate_model(dataset: str = "all") -> dict[str, object]:
-    result = evaluate_main_model(dataset=dataset)
+def evaluate_model(dataset: str = "all", scope: str = "main") -> dict[str, object]:
+    result = evaluate_models(dataset=dataset, scope=scope)
     cache_latest_evaluation(result)
     trigger_status_refresh(force=True)
     return result

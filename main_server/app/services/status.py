@@ -20,7 +20,6 @@ from main_server.app.core.config import (
     EMPLOYABILITY_2_HEALTH_URL,
     MODELS_DIR,
 )
-from main_server.app.services.evaluation import evaluate_main_model
 from main_server.app.services.model_registry import get_registry_overview
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
 from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
@@ -208,15 +207,9 @@ def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
 
 
 def _compute_expensive_snapshot() -> dict[str, Any]:
-    try:
-        metrics: dict[str, object] = evaluate_main_model()
-    except Exception as exc:  # noqa: BLE001
-        metrics = {"available": False, "reason": str(exc)}
-
     comparison = get_performance_comparison()
     model_metrics = get_model_metric_comparison()
     return {
-        "metrics": metrics,
         "comparison": comparison,
         "model_metrics": model_metrics,
         "last_refresh_utc": datetime.now(tz=timezone.utc).isoformat(),

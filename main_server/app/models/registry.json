@@ -1,3 +1,54 @@
 {
-  "families": {}
+  "families": {
+    "main_model": {
+      "active": "main_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "main_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\main_model\\main_model_v1.pkl",
+          "created_utc": "2026-03-23T05:22:46.742690+00:00",
+          "size_bytes": 1608889,
+          "metadata": {
+            "dataset": "set1",
+            "mode": "main_train"
+          }
+        }
+      ]
+    },
+    "employability_1_model": {
+      "active": "employability_1_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "employability_1_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\employability_1_model\\employability_1_model_v1.pkl",
+          "created_utc": "2026-03-23T05:29:46.691529+00:00",
+          "size_bytes": 1612457,
+          "metadata": {
+            "source_server": "employability_1",
+            "target_server": "main",
+            "upload_filename": "employability_1_model_v2.pkl"
+          }
+        }
+      ]
+    },
+    "employability_2_model": {
+      "active": "employability_2_model_v1",
+      "versions": [
+        {
+          "version": 1,
+          "version_name": "employability_2_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\employability_2_model\\employability_2_model_v1.pkl",
+          "created_utc": "2026-03-23T05:30:07.770028+00:00",
+          "size_bytes": 1612457,
+          "metadata": {
+            "source_server": "employability_2",
+            "target_server": "main",
+            "upload_filename": "employability_2_model_v2.pkl"
+          }
+        }
+      ]
+    }
+  }
 }

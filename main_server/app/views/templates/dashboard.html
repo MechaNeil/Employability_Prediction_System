@@ -868,7 +868,7 @@
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-play"></i></span>Train Main Model</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-paper-plane"></i></span>Employability Push Workflow</div>
             <div class="nav-item"><span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>Aggregate Models</div>
-            <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Main</button>
+            <button class="nav-item nav-button" onclick="openEvaluationPanel()"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Evaluate Models</button>
             <div class="group-title">Employability Dashboards</div>
             <button class="nav-item nav-button" onclick="openEmployabilityDashboard(1)"><span class="nav-icon"><i class="fa-solid fa-user-graduate"></i></span>Employability-1 Dashboard</button>
             <button class="nav-item nav-button" onclick="openEmployabilityDashboard(2)"><span class="nav-icon"><i class="fa-solid fa-briefcase"></i></span>Employability-2 Dashboard</button>
@@ -1005,8 +1005,8 @@
                       <div class="action-sub">Update next main model version from employability uploads</div>
                     </button>
                     <button class="action a5" id="btnEvaluate" onclick="runAction('evaluate')">
-                      <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Main</div>
-                      <div class="action-sub">Test on holdout set</div>
+                      <div class="action-title"><i class="fa-solid fa-chart-column"></i>Evaluate Models</div>
+                      <div class="action-sub">Run selected evaluation scope on test set</div>
                     </button>
                   </div>
                 </article>
@@ -1054,16 +1054,20 @@
                     <option value="set2">Test Set-2</option>
                     <option value="set3">Test Set-3</option>
                   </select>
+                  <select id="evalScope" class="control-input" style="min-width:138px;">
+                    <option value="main" selected>Main Only</option>
+                    <option value="all">All Models</option>
+                  </select>
                   <button class="eval-btn active" id="evalModeBar" onclick="setEvaluationMode('bar')"><i class="fa-solid fa-chart-column"></i> Grouped Bars</button>
                   <button class="eval-btn" id="evalModeRadar" onclick="setEvaluationMode('radar')"><i class="fa-solid fa-bullseye"></i> Radar</button>
-                  <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Main Eval</button>
+                  <button class="eval-btn" onclick="runAction('evaluate')"><i class="fa-solid fa-flask"></i> Run Evaluation</button>
                 </div>
               </div>
               <div class="eval-guide">
                 <strong>How to run and read evaluation</strong>
                 <ol class="eval-steps">
                   <li>Select a test dataset (or use all test sets).</li>
-                  <li>Click Run Main Eval to evaluate the latest main model.</li>
+                  <li>Choose Main Only or All Models, then run evaluation.</li>
                   <li>Switch between Grouped Bars and Radar for easier comparison.</li>
                   <li>Use the metric cards to review Accuracy, Precision, Recall, and F1.</li>
                 </ol>
@@ -1289,6 +1293,12 @@
             return null;
           }
 
+          function getEvaluationSelections() {
+            const dataset = document.getElementById('evalDataset')?.value || 'all';
+            const scope = document.getElementById('evalScope')?.value || 'main';
+            return { dataset, scope };
+          }
+
           function extractActiveVersion(registry, family) {
             const active = registry?.[family]?.active;
             if (!active) {
@@ -1406,7 +1416,7 @@
 
           function normalizeModelMetrics(status) {
             const comparison = status.comparison || {};
-            const modelMetrics = status.model_metrics || {};
+            const modelMetrics = status.metrics?.model_metrics || status.model_metrics || {};
             const mainMetrics = status.metrics?.metrics || {};
 
             const fromBundle = (bundle) => {
@@ -1436,6 +1446,27 @@
               main,
               employability_1: h1,
               employability_2: h2,
+            };
+          }
+
+          function normalizeEvaluationResponse(body) {
+            const fromBundle = (bundle) => {
+              if (!bundle || typeof bundle !== 'object') {
+                return [null, null, null, null];
+              }
+              return [
+                metricToPercent(bundle.accuracy),
+                metricToPercent(bundle.precision),
+                metricToPercent(bundle.recall),
+                metricToPercent(bundle.f1),
+              ];
+            };
+
+            const modelMetrics = body?.model_metrics || {};
+            return {
+              main: fromBundle(modelMetrics.main),
+              employability_1: fromBundle(modelMetrics.employability_1),
+              employability_2: fromBundle(modelMetrics.employability_2),
             };
           }
 
@@ -1584,7 +1615,11 @@
             if (action === 'deploy') return { path: '/deploy', method: 'POST' };
             if (action === 'retrain-employabilitys') return { path: '/retrain-employabilitys', method: 'POST' };
             if (action === 'aggregate') return { path: '/aggregate', method: 'GET' };
-            if (action === 'evaluate') return { path: '/evaluate', method: 'GET' };
+            if (action === 'evaluate') {
+              const { dataset, scope } = getEvaluationSelections();
+              const params = new URLSearchParams({ dataset, scope });
+              return { path: `/evaluate?${params.toString()}`, method: 'GET' };
+            }
             return { path: '/status', method: 'GET' };
           }
 
@@ -1593,7 +1628,10 @@
             if (action === 'deploy') return 'Pushing main model to employabilitys';
             if (action === 'retrain-employabilitys') return 'Checking retrain endpoint status';
             if (action === 'aggregate') return 'Aggregating local models';
-            if (action === 'evaluate') return 'Evaluating main model';
+            if (action === 'evaluate') {
+              const { scope } = getEvaluationSelections();
+              return scope === 'all' ? 'Evaluating all models' : 'Evaluating main model';
+            }
             return 'Processing action';
           }
 
@@ -1615,7 +1653,12 @@
             if (action === 'deploy') return 'Main model was pushed to employability servers.';
             if (action === 'retrain-employabilitys') return 'Main no longer triggers retraining. Employabilitys retrain locally.';
             if (action === 'aggregate') return 'Main model was updated from federated aggregation.';
-            if (action === 'evaluate') return 'Main model evaluation completed successfully.';
+            if (action === 'evaluate') {
+              const { scope } = getEvaluationSelections();
+              return scope === 'all'
+                ? 'Evaluation completed for all available models.'
+                : 'Main model evaluation completed successfully.';
+            }
             if (action === 'upload-forward') return 'Model upload and forwarding completed successfully.';
             if (action === 'delete-version') return 'Selected model version was deleted.';
             if (action === 'delete-family') return 'Selected model family and all versions were deleted.';
@@ -1743,7 +1786,10 @@
               }
 
               const readyModels = Object.values(latestModelMetrics).filter((metrics) => metrics.every((m) => m !== null)).length;
-              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/3 model slots have complete metrics.`;
+              const selectedDataset = status.metrics?.dataset || 'all';
+              const selectedScope = status.metrics?.scope || 'main';
+              const scopeLabel = selectedScope === 'all' ? 'all models' : 'main only';
+              evaluationMeta.textContent = `Interactive evaluation on ${selectedDataset} (${scopeLabel}). ${readyModels}/3 model slots have complete metrics.`;
 
               updateWorkflowFromStatus(status);
 
@@ -1797,6 +1843,14 @@
               const body = await res.json();
               if (!res.ok) {
                 throw new Error(body.detail || JSON.stringify(body));
+              }
+              if (action === 'evaluate') {
+                latestModelMetrics = normalizeEvaluationResponse(body);
+                renderEvaluation(latestModelMetrics);
+                lastEvaluationSignature = JSON.stringify(latestModelMetrics);
+                const modelCount = Array.isArray(body.evaluated_models) ? body.evaluated_models.length : 0;
+                const datasetLabel = body.dataset || getEvaluationSelections().dataset;
+                evaluationMeta.textContent = `Evaluation run completed on ${datasetLabel}. ${modelCount}/3 models returned metrics.`;
               }
               writeLog(`${action.toUpperCase()} success: ${JSON.stringify(body)}`, 'success');
               setWorkflowCompletionNotice(action);
