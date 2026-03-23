@@ -16,8 +16,8 @@ from sklearn.metrics import recall_score
 
 from main_server.app.core.config import (
     BASE_MODEL_PATH,
-    HOSPITAL_1_HEALTH_URL,
-    HOSPITAL_2_HEALTH_URL,
+    EMPLOYABILITY_1_HEALTH_URL,
+    EMPLOYABILITY_2_HEALTH_URL,
     MODELS_DIR,
 )
 from main_server.app.services.evaluation import evaluate_main_model
@@ -30,8 +30,8 @@ from shared.model_registry import get_active_version
 def _default_comparison() -> dict[str, float | None]:
     return {
         "main": None,
-        "hospital_1": None,
-        "hospital_2": None,
+        "employability_1": None,
+        "employability_2": None,
         "aggregated_main": None,
     }
 
@@ -39,8 +39,8 @@ def _default_comparison() -> dict[str, float | None]:
 def _default_model_metrics() -> dict[str, dict[str, float] | None]:
     return {
         "main": None,
-        "hospital_1": None,
-        "hospital_2": None,
+        "employability_1": None,
+        "employability_2": None,
         "aggregated_main": None,
     }
 
@@ -146,7 +146,7 @@ def _metric_bundle_for_dataset(model, dataset_key: str) -> dict[str, float] | No
         return None
 
 
-def _load_hospital_model(model_family: str):
+def _load_employability_model(model_family: str):
     try:
         active_version = get_active_version(MODELS_DIR, model_family)
         if active_version is None:
@@ -171,15 +171,15 @@ def get_performance_comparison() -> dict[str, float | None]:
 
     base_accuracy = _safe_accuracy(main_model) if main_model is not None else None
 
-    h1_model = _load_hospital_model("hospital_1_model")
-    h2_model = _load_hospital_model("hospital_2_model")
+    h1_model = _load_employability_model("employability_1_model")
+    h2_model = _load_employability_model("employability_2_model")
     h1_accuracy = _safe_accuracy(h1_model) if h1_model is not None else None
     h2_accuracy = _safe_accuracy(h2_model) if h2_model is not None else None
 
     return {
         "main": base_accuracy,
-        "hospital_1": h1_accuracy,
-        "hospital_2": h2_accuracy,
+        "employability_1": h1_accuracy,
+        "employability_2": h2_accuracy,
         "aggregated_main": base_accuracy,
     }
 
@@ -194,15 +194,15 @@ def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
     elif BASE_MODEL_PATH.exists():
         base_model = joblib.load(BASE_MODEL_PATH)
 
-    h1_model = _load_hospital_model("hospital_1_model")
-    h2_model = _load_hospital_model("hospital_2_model")
+    h1_model = _load_employability_model("employability_1_model")
+    h2_model = _load_employability_model("employability_2_model")
 
     main_bundle = _safe_metric_bundle(base_model)
 
     return {
         "main": main_bundle,
-        "hospital_1": _safe_metric_bundle(h1_model),
-        "hospital_2": _safe_metric_bundle(h2_model),
+        "employability_1": _safe_metric_bundle(h1_model),
+        "employability_2": _safe_metric_bundle(h2_model),
         "aggregated_main": main_bundle,
     }
 
@@ -266,10 +266,10 @@ def get_system_status() -> dict[str, object]:
     trigger_status_refresh(force=False)
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        hospital_1_future = executor.submit(_service_health, HOSPITAL_1_HEALTH_URL)
-        hospital_2_future = executor.submit(_service_health, HOSPITAL_2_HEALTH_URL)
-        hospital_1 = hospital_1_future.result()
-        hospital_2 = hospital_2_future.result()
+        employability_1_future = executor.submit(_service_health, EMPLOYABILITY_1_HEALTH_URL)
+        employability_2_future = executor.submit(_service_health, EMPLOYABILITY_2_HEALTH_URL)
+        employability_1 = employability_1_future.result()
+        employability_2 = employability_2_future.result()
 
     with _CACHE_LOCK:
         metrics = dict(_STATUS_CACHE.get("metrics") or {})
@@ -280,9 +280,9 @@ def get_system_status() -> dict[str, object]:
 
     return {
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
-        "hospitals": {
-            "hospital_1": hospital_1,
-            "hospital_2": hospital_2,
+        "employabilitys": {
+            "employability_1": employability_1,
+            "employability_2": employability_2,
         },
         "models": versions,
         "metrics": metrics,
@@ -355,3 +355,4 @@ def compare_named_versions(test_dataset: str, items: list[dict[str, str]]) -> di
         "test_dataset": dataset_key,
         "results": results,
     }
+

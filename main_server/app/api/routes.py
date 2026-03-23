@@ -100,7 +100,7 @@ def delete_all_models() -> dict[str, object]:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-@router.post("/retrain-hospitals")
+@router.post("/retrain-employabilitys")
 def retrain_remote(payload: RetrainTargetsRequest) -> dict[str, object]:
     try:
         response = federation_controller.retrain_remote_models(payload.targets, payload.dataset)
@@ -177,3 +177,4 @@ def compare_versions(payload: VersionCompareRequest) -> dict[str, object]:
         )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+

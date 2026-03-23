@@ -8,8 +8,8 @@ import requests
 
 from main_server.app.core.config import (
     BASE_MODEL_PATH,
-    HOSPITAL_1_UPLOAD_URL,
-    HOSPITAL_2_UPLOAD_URL,
+    EMPLOYABILITY_1_UPLOAD_URL,
+    EMPLOYABILITY_2_UPLOAD_URL,
     MODELS_DIR,
     REQUEST_RETRIES,
     REQUEST_TIMEOUT_SECONDS,
@@ -22,13 +22,13 @@ from shared.model_registry import get_active_version
 logger = logging.getLogger("main_server.orchestration")
 
 TARGET_ENDPOINTS = {
-    "hospital_1": {
-        "upload": HOSPITAL_1_UPLOAD_URL,
-        "model_family": "hospital_1_model",
+    "employability_1": {
+        "upload": EMPLOYABILITY_1_UPLOAD_URL,
+        "model_family": "employability_1_model",
     },
-    "hospital_2": {
-        "upload": HOSPITAL_2_UPLOAD_URL,
-        "model_family": "hospital_2_model",
+    "employability_2": {
+        "upload": EMPLOYABILITY_2_UPLOAD_URL,
+        "model_family": "employability_2_model",
     },
 }
 
@@ -71,7 +71,7 @@ def aggregate_pipeline() -> dict[str, object]:
         }
     ]
 
-    for family in ("hospital_1_model", "hospital_2_model"):
+    for family in ("employability_1_model", "employability_2_model"):
         uploaded_model, contributor = _load_uploaded_model(family)
         if uploaded_model is None or contributor is None:
             continue
@@ -80,8 +80,8 @@ def aggregate_pipeline() -> dict[str, object]:
 
     if len(models) == 1:
         raise FileNotFoundError(
-            "No deployed hospital model found on main server. "
-            "Hospitals must deploy/upload first."
+            "No deployed employability model found on main server. "
+            "Employabilitys must deploy/upload first."
         )
 
     aggregate_result = aggregate_models(models, contributors)
@@ -105,7 +105,7 @@ def aggregate_pipeline() -> dict[str, object]:
     }
 
 
-def retrain_hospitals(targets: list[str], dataset: str = "set2") -> dict[str, object]:
+def retrain_employabilitys(targets: list[str], dataset: str = "set2") -> dict[str, object]:
     normalized_targets = [target.strip().lower() for target in targets if target.strip()]
     if not normalized_targets:
         raise ValueError("At least one retrain target is required.")
@@ -123,8 +123,8 @@ def retrain_hospitals(targets: list[str], dataset: str = "set2") -> dict[str, ob
 
     return {
         "message": (
-            "Main-driven hospital retraining is disabled. "
-            "Hospitals must retrain locally and deploy/upload explicitly."
+            "Main-driven employability retraining is disabled. "
+            "Employabilitys must retrain locally and deploy/upload explicitly."
         ),
         "dataset": dataset,
         "disabled_targets": disabled,
@@ -132,7 +132,7 @@ def retrain_hospitals(targets: list[str], dataset: str = "set2") -> dict[str, ob
     }
 
 
-def deploy_to_hospitals() -> dict[str, object]:
+def deploy_to_employabilitys() -> dict[str, object]:
     main_entry = get_active_version(MODELS_DIR, "main_model")
     model_path = Path(str(main_entry["path"])) if main_entry is not None else BASE_MODEL_PATH
     if not model_path.exists():
@@ -141,7 +141,7 @@ def deploy_to_hospitals() -> dict[str, object]:
     results: dict[str, object] = {}
     success_count = 0
 
-    for hospital_name, endpoint in TARGET_ENDPOINTS.items():
+    for employability_name, endpoint in TARGET_ENDPOINTS.items():
         last_error: str | None = None
         for _ in range(max(1, REQUEST_RETRIES)):
             try:
@@ -150,7 +150,7 @@ def deploy_to_hospitals() -> dict[str, object]:
                     response = requests.post(endpoint["upload"], files=files, timeout=REQUEST_TIMEOUT_SECONDS)
                 response.raise_for_status()
                 payload = response.json()
-                results[hospital_name] = {
+                results[employability_name] = {
                     "ok": True,
                     "endpoint": endpoint["upload"],
                     "response": payload,
@@ -162,17 +162,17 @@ def deploy_to_hospitals() -> dict[str, object]:
                 last_error = str(exc)
 
         if last_error is not None:
-            results[hospital_name] = {
+            results[employability_name] = {
                 "ok": False,
                 "endpoint": endpoint["upload"],
                 "error": last_error,
             }
 
     if success_count == 0:
-        raise RuntimeError("Deployment to hospitals failed for all targets.")
+        raise RuntimeError("Deployment to employabilitys failed for all targets.")
 
     return {
-        "message": "Main model pushed to hospitals.",
+        "message": "Main model pushed to employabilitys.",
         "source_version": main_entry["version_name"] if main_entry is not None else None,
         "model_path": str(model_path),
         "success_count": success_count,
@@ -216,3 +216,4 @@ def forward_uploaded_model(
         "target_response": payload,
         "model_family": model_family,
     }
+

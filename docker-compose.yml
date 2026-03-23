@@ -1,18 +1,19 @@
 services:
-  hospital1:
+  employability1:
     build:
       context: .
-      dockerfile: hospital_1/Dockerfile
-    container_name: hospital_1_server
+      dockerfile: employability_1/Dockerfile
+    container_name: employability_1_server
     ports:
       - "8001:8001"
     restart: unless-stopped
 
-  hospital2:
+  employability2:
     build:
       context: .
-      dockerfile: hospital_2/Dockerfile
-    container_name: hospital_2_server
+      dockerfile: employability_2/Dockerfile
+    container_name: employability_2_server
     ports:
       - "8002:8002"
     restart: unless-stopped
+

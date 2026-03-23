@@ -16,36 +16,36 @@
         }
       ]
     },
-    "hospital_1_model": {
-      "active": "hospital_1_model_v1",
+    "employability_1_model": {
+      "active": "employability_1_model_v1",
       "versions": [
         {
           "version": 1,
-          "version_name": "hospital_1_model_v1",
-          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_1_model\\hospital_1_model_v1.pkl",
+          "version_name": "employability_1_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\employability_1_model\\employability_1_model_v1.pkl",
           "created_utc": "2026-03-23T04:54:55.628931+00:00",
           "size_bytes": 1609065,
           "metadata": {
-            "source_server": "hospital_1",
+            "source_server": "employability_1",
             "target_server": "main",
-            "upload_filename": "hospital_1_model_v1.pkl"
+            "upload_filename": "employability_1_model_v1.pkl"
           }
         }
       ]
     },
-    "hospital_2_model": {
-      "active": "hospital_2_model_v1",
+    "employability_2_model": {
+      "active": "employability_2_model_v1",
       "versions": [
         {
           "version": 1,
-          "version_name": "hospital_2_model_v1",
-          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\hospital_2_model\\hospital_2_model_v1.pkl",
+          "version_name": "employability_2_model_v1",
+          "path": "C:\\Users\\ASUS\\Desktop\\Midterm Exam\\Employability_Prediction_System\\federated-ml\\main_server\\app\\models\\employability_2_model\\employability_2_model_v1.pkl",
           "created_utc": "2026-03-23T04:55:06.878784+00:00",
           "size_bytes": 1609065,
           "metadata": {
-            "source_server": "hospital_2",
+            "source_server": "employability_2",
             "target_server": "main",
-            "upload_filename": "hospital_2_model_v1.pkl"
+            "upload_filename": "employability_2_model_v1.pkl"
           }
         }
       ]

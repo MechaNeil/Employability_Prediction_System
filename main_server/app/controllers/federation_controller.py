@@ -4,9 +4,9 @@ from main_server.app.services.evaluation import evaluate_main_model
 from main_server.app.services.inference import predict_records
 from main_server.app.services.orchestration import (
     aggregate_pipeline,
-    deploy_to_hospitals,
+    deploy_to_employabilitys,
     forward_uploaded_model,
-    retrain_hospitals,
+    retrain_employabilitys,
 )
 from main_server.app.services.status import (
     cache_latest_evaluation,
@@ -48,11 +48,11 @@ def aggregate_model() -> dict[str, object]:
 
 
 def deploy_model() -> dict[str, object]:
-    return deploy_to_hospitals()
+    return deploy_to_employabilitys()
 
 
 def retrain_remote_models(targets: list[str], dataset: str = "set2") -> dict[str, object]:
-    return retrain_hospitals(targets=targets, dataset=dataset)
+    return retrain_employabilitys(targets=targets, dataset=dataset)
 
 
 def evaluate_model(dataset: str = "all") -> dict[str, object]:
@@ -107,3 +107,4 @@ def forward_uploaded_model_to_target(
         target_server=target_server,
         model_family=model_family,
     )
+

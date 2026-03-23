@@ -1,0 +1,944 @@
+<html>
+  <head>
+    <title>Employability-2 Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg-1: #1f283e;
+        --bg-2: #3f587a;
+        --surface: #f5f6f9;
+        --card: #ffffff;
+        --ink: #1f2d3f;
+        --muted: #647388;
+        --line: #d7e0ea;
+        --primary: #2f66ff;
+        --success: #1ea97b;
+        --warning: #d88a22;
+        --accent: #1483aa;
+        --danger: #d84f4f;
+        --shadow: 0 12px 26px rgba(12, 24, 42, 0.16);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        color: #fff;
+        background: radial-gradient(circle at 84% 12%, rgba(255, 220, 169, 0.16), transparent 38%),
+                    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      }
+
+      .top {
+        padding: 18px 20px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .title {
+        margin: 0;
+        font-family: "Sora", "Manrope", sans-serif;
+        font-size: 38px;
+        line-height: 1;
+      }
+
+      .sub {
+        margin: 7px 0 0;
+        font-size: 14px;
+        opacity: 0.95;
+      }
+
+      .chip {
+        border-radius: 999px;
+        padding: 8px 13px;
+        border: 1px solid rgba(166, 240, 212, 0.52);
+        background: rgba(34, 160, 116, 0.22);
+        color: #bbf7dc;
+        font-weight: 700;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .layout {
+        padding: 0 12px 12px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .panel {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 13px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 9px;
+      }
+
+      .card {
+        border: 1px solid #d8e4f0;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
+        border-radius: 12px;
+        padding: 11px;
+      }
+
+      .card h4 {
+        margin: 0;
+        font-size: 13px;
+        color: #3f546b;
+      }
+
+      .card .value {
+        margin-top: 8px;
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .value.primary { color: var(--primary); }
+      .value.success { color: var(--success); }
+      .value.warning { color: var(--warning); }
+      .value.accent { color: var(--accent); }
+
+      .card small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: 1.25fr 1fr;
+        gap: 10px;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+
+      .info-note {
+        margin: 0 0 10px;
+        border: 1px dashed #c4d3e3;
+        background: #f6f9fe;
+        border-radius: 10px;
+        color: #365173;
+        font-size: 12px;
+        padding: 9px;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .control {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #f7fbff;
+        padding: 8px;
+      }
+
+      .control label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 12px;
+        color: #3a5170;
+        font-weight: 700;
+      }
+
+      .input {
+        width: 100%;
+        border: 1px solid #c3d3e3;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px;
+        color: #213a55;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .actions {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        color: #fff;
+        text-align: left;
+        min-height: 74px;
+        padding: 11px;
+        cursor: pointer;
+        transition: transform 0.14s ease, filter 0.14s ease;
+      }
+
+      .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+      .btn:disabled { opacity: 0.7; cursor: wait; }
+      .btn strong { display: block; font-size: 14px; }
+      .btn span { font-size: 12px; opacity: 0.94; }
+      .b1 { background: linear-gradient(90deg, #2f66ff, #244fca); }
+      .b2 { background: linear-gradient(90deg, #1ea97b, #13835f); }
+      .b3 { background: linear-gradient(90deg, #d88a22, #b06b11); }
+      .b4 { background: linear-gradient(90deg, #4a5c79, #37465d); }
+      .b5 { background: linear-gradient(90deg, #1483aa, #0e6685); }
+
+      .metrics {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .metric {
+        border: 1px solid #d7e4f3;
+        border-radius: 10px;
+        background: #f7fbff;
+        padding: 9px;
+      }
+
+      .metric h5 {
+        margin: 0;
+        font-size: 12px;
+        color: #4a607b;
+      }
+
+      .metric div {
+        margin-top: 6px;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .status-list {
+        border: 1px solid #d5e1ee;
+        border-radius: 10px;
+        padding: 10px;
+        background: linear-gradient(180deg, #fbfdff, #f4f9ff);
+      }
+
+      .status-list p {
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: #4b6079;
+      }
+
+      .status-list p:last-child { margin-bottom: 0; }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .canvas-wrap {
+        border: 1px solid #d9e4f2;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #fcfeff, #f3f9ff);
+        padding: 10px;
+        position: relative;
+        height: 300px;
+        min-height: 300px;
+      }
+
+      .canvas-wrap.compact {
+        margin-top: 10px;
+        height: 280px;
+        min-height: 280px;
+      }
+
+      .canvas-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+      }
+
+      .chart-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .toggle {
+        border: 1px solid #c5d5e7;
+        border-radius: 999px;
+        background: #f2f8ff;
+        color: #244264;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .toggle.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid #d7e3ef;
+        border-radius: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 760px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid #e4ecf3;
+        padding: 8px;
+        font-size: 12px;
+        color: #2d4561;
+      }
+
+      th {
+        background: #f2f7fc;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .pill.good { background: #e5f7ef; color: #0f8758; }
+      .pill.warn { background: #fff3e1; color: #a56314; }
+
+      .log {
+        margin-top: 10px;
+        background: #111b2d;
+        border-radius: 12px;
+        padding: 10px;
+        color: #dbe9fb;
+        font: 12px/1.45 Consolas, monospace;
+        height: 160px;
+        overflow: auto;
+      }
+
+      .line.info { color: #dbe9fb; }
+      .line.success { color: #97f1c9; }
+      .line.warn { color: #ffd899; }
+      .line.error { color: #ff9f9f; }
+
+      @media (max-width: 1200px) {
+        .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .controls-grid { grid-template-columns: 1fr; }
+        .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 900px) {
+        .charts-grid { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .control-row { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 680px) {
+        .top { padding: 14px 14px 6px; }
+        .title { font-size: 30px; }
+        .layout { padding: 0 10px 10px; }
+        .cards { grid-template-columns: 1fr; }
+        .actions { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1 class="title">Employability-2 Model Dashboard</h1>
+        <p class="sub">Local training and versioned model lifecycle aligned with the federated main server workflow.</p>
+      </div>
+      <div id="serviceBadge" class="chip"><i class="fa-solid fa-circle-check"></i>Service Online</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel cards">
+        <article class="card">
+          <h4>Active Version</h4>
+          <div id="activeVersionCard" class="value primary">-</div>
+          <small id="activePathCard">Local path: -</small>
+        </article>
+        <article class="card">
+          <h4>Total Local Versions</h4>
+          <div id="versionCountCard" class="value success">0</div>
+          <small>Stored under employability_2 app/models</small>
+        </article>
+        <article class="card">
+          <h4>Selected Test Accuracy</h4>
+          <div id="accuracyCard" class="value warning">-</div>
+          <small id="accuracyDatasetCard">Dataset: -</small>
+        </article>
+        <article class="card">
+          <h4>Deploy Status</h4>
+          <div id="deployStatusCard" class="value accent">Idle</div>
+          <small id="lastUpdatedCard">Last updated: -</small>
+        </article>
+      </section>
+
+      <section class="panel controls-grid">
+        <div>
+          <h3 class="section-title">Actions</h3>
+          <p class="info-note">Models trained in Employability-2 are saved as local versions first, then you can deploy the selected active local version to main server.</p>
+
+          <div class="control-row">
+            <div class="control">
+              <label for="trainDataset">Training Dataset</label>
+              <select id="trainDataset" class="input">
+                <option value="set1">Set-1</option>
+                <option value="set2">Set-2</option>
+                <option value="set3" selected>Set-3</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="testDataset">Evaluation Test Dataset</label>
+              <select id="testDataset" class="input">
+                <option value="set1">Test Set-1</option>
+                <option value="set2">Test Set-2</option>
+                <option value="set3">Test Set-3</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="versionSelect">Activate Local Version</label>
+              <select id="versionSelect" class="input"></select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn b1" id="btnTrain" onclick="trainModel(false)"><strong><i class="fa-solid fa-play"></i> Train Local</strong><span>Create Employability-2 version</span></button>
+            <button class="btn b3" id="btnRetrain" onclick="trainModel(true)"><strong><i class="fa-solid fa-arrows-rotate"></i> Retrain From Main</strong><span>Pull main weights, store locally</span></button>
+            <button class="btn b2" id="btnEval" onclick="evaluateActive()"><strong><i class="fa-solid fa-chart-column"></i> Evaluate Active</strong><span>Run test set evaluation</span></button>
+            <button class="btn b5" id="btnActivate" onclick="activateVersion()"><strong><i class="fa-solid fa-check"></i> Activate Selected</strong><span>Switch local active model</span></button>
+            <button class="btn b4" id="btnDeploy" onclick="deployToMain()"><strong><i class="fa-solid fa-paper-plane"></i> Deploy To Main</strong><span>Send active local version</span></button>
+            <button class="btn b4" onclick="downloadModel()"><strong><i class="fa-solid fa-download"></i> Download Active</strong><span>Download .pkl artifact</span></button>
+            <button class="btn b3" id="btnDeleteVersion" onclick="deleteSelectedVersion()"><strong><i class="fa-solid fa-file-circle-xmark"></i> Delete Selected</strong><span>Delete selected local version</span></button>
+            <button class="btn b4" id="btnDeleteFamily" onclick="deleteFamily()"><strong><i class="fa-solid fa-folder-minus"></i> Delete Local Family</strong><span>Delete all Employability-2 local versions</span></button>
+          </div>
+
+          <div class="control-row" style="margin-top:8px;">
+            <div class="control" style="grid-column: span 2;">
+              <label for="uploadInput">Upload Model Artifact</label>
+              <input id="uploadInput" class="input" type="file" accept=".pkl" />
+            </div>
+            <div class="control">
+              <label>Upload Action</label>
+              <button class="input" style="height:36px; cursor:pointer;" onclick="uploadModel()">Upload To Employability-2 Registry</button>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <article class="metric"><h5>Accuracy</h5><div id="acc">-</div></article>
+            <article class="metric"><h5>Precision</h5><div id="pre">-</div></article>
+            <article class="metric"><h5>Recall</h5><div id="rec">-</div></article>
+            <article class="metric"><h5>F1 Score</h5><div id="f1">-</div></article>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="section-title">Workflow Status</h3>
+          <div class="status-list">
+            <p><strong>Service:</strong> employability_2</p>
+            <p><strong>Active Version:</strong> <span id="activeVersionText">-</span></p>
+            <p><strong>Active Path:</strong> <span id="activePathText">-</span></p>
+            <p><strong>Version Storage:</strong> <span class="pill good"><i class="fa-solid fa-folder-tree"></i>Local Registry</span></p>
+            <p><strong>Main Server Transfer:</strong> <span id="deployBadge" class="pill warn"><i class="fa-solid fa-hourglass-half"></i>Not Deployed</span></p>
+          </div>
+
+          <div class="canvas-wrap compact">
+            <div class="chart-actions">
+              <strong style="font-size:14px; color:#2b4561;">Version Sources</strong>
+            </div>
+            <canvas id="versionSourceChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel charts-grid">
+        <article>
+          <div class="chart-actions">
+            <h3 class="section-title" style="margin:0; font-size:16px;">Training-Set Comparison</h3>
+            <div>
+              <button id="compareBar" class="toggle active" onclick="setCompareMode('bar')">Grouped Bars</button>
+              <button id="compareRadar" class="toggle" onclick="setCompareMode('radar')">Radar</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="comparisonChart"></canvas>
+          </div>
+        </article>
+
+        <article>
+          <div class="chart-actions">
+            <h3 class="section-title" style="margin:0; font-size:16px;">Active Model Across Test Sets</h3>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="activeEvalChart"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h3 class="section-title">Local Version Registry</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Dataset</th>
+                <th>Mode</th>
+                <th>Created UTC</th>
+                <th>Size (KB)</th>
+                <th>Path</th>
+              </tr>
+            </thead>
+            <tbody id="versionTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3 class="section-title">Activity Logs</h3>
+        <div id="log" class="log"></div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        compareMode: 'bar',
+        comparisonChart: null,
+        activeEvalChart: null,
+        versionSourceChart: null,
+        busy: false,
+      };
+
+      const logEl = document.getElementById('log');
+
+      function log(message, kind = 'info') {
+        const stamp = new Date().toLocaleTimeString();
+        logEl.innerHTML = `<div class="line ${kind}">[${stamp}] ${message}</div>` + logEl.innerHTML;
+        document.getElementById('lastUpdatedCard').textContent = `Last updated: ${stamp}`;
+      }
+
+      function pct(value) {
+        if (value === null || value === undefined) return '-';
+        return `${(value * 100).toFixed(1)}%`;
+      }
+
+      function kb(bytes) {
+        if (!bytes) return '-';
+        return (bytes / 1024).toFixed(1);
+      }
+
+      async function api(method, path, body, formData) {
+        const response = await fetch(path, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : formData || undefined,
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.detail || JSON.stringify(payload));
+        }
+        return payload;
+      }
+
+      function setBusy(isBusy) {
+        state.busy = isBusy;
+        ['btnTrain', 'btnRetrain', 'btnEval', 'btnActivate', 'btnDeploy', 'btnDeleteVersion', 'btnDeleteFamily'].forEach((id) => {
+          const node = document.getElementById(id);
+          if (node) node.disabled = isBusy;
+        });
+      }
+
+      function setCompareMode(mode) {
+        state.compareMode = mode === 'radar' ? 'radar' : 'bar';
+        document.getElementById('compareBar').classList.toggle('active', state.compareMode === 'bar');
+        document.getElementById('compareRadar').classList.toggle('active', state.compareMode === 'radar');
+        refreshComparisonChart().catch((err) => log(`Compare chart error: ${err.message}`, 'error'));
+      }
+
+      async function trainModel(retrainFromMain) {
+        if (state.busy) return;
+        setBusy(true);
+        try {
+          const dataset = document.getElementById('trainDataset').value;
+          const result = await api('POST', '/train', { dataset, retrain_from_main: retrainFromMain });
+          log(`${retrainFromMain ? 'RETRAIN' : 'TRAIN'} completed: ${result.active_version}`, 'success');
+          await refreshAll();
+        } catch (err) {
+          log(`Train failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function evaluateActive() {
+        if (state.busy) return;
+        setBusy(true);
+        try {
+          const testDataset = document.getElementById('testDataset').value;
+          const result = await api('POST', '/evaluate', { test_dataset: testDataset });
+          document.getElementById('acc').textContent = pct(result.accuracy);
+          document.getElementById('pre').textContent = pct(result.precision);
+          document.getElementById('rec').textContent = pct(result.recall);
+          document.getElementById('f1').textContent = pct(result.f1);
+          document.getElementById('accuracyCard').textContent = pct(result.accuracy);
+          document.getElementById('accuracyDatasetCard').textContent = `Dataset: ${testDataset.toUpperCase()}`;
+          log(`Evaluation completed on ${testDataset.toUpperCase()} with accuracy ${pct(result.accuracy)}`, 'success');
+          await refreshStatusAndCharts();
+        } catch (err) {
+          log(`Evaluate failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function activateVersion() {
+        const versionName = document.getElementById('versionSelect').value;
+        if (!versionName) {
+          log('Activate skipped: no version selected.', 'warn');
+          return;
+        }
+
+        try {
+          const result = await api('POST', '/model/activate', { version_name: versionName });
+          log(`Activated local version ${result.active_version}`, 'success');
+          await refreshAll();
+        } catch (err) {
+          log(`Activate failed: ${err.message}`, 'error');
+        }
+      }
+
+      async function deployToMain() {
+        try {
+          const result = await api('POST', '/deploy-to-main', {});
+          document.getElementById('deployStatusCard').textContent = 'Deployed';
+          document.getElementById('deployBadge').innerHTML = '<i class="fa-solid fa-circle-check"></i>Deployed';
+          document.getElementById('deployBadge').className = 'pill good';
+          log(`Deploy success: ${result.uploaded_version}`, 'success');
+        } catch (err) {
+          document.getElementById('deployStatusCard').textContent = 'Failed';
+          log(`Deploy failed: ${err.message}`, 'error');
+        }
+      }
+
+      function downloadModel() {
+        window.open('/model', '_blank');
+        log('Downloading active local model artifact.', 'info');
+      }
+
+      async function uploadModel() {
+        const input = document.getElementById('uploadInput');
+        if (!input.files.length) {
+          log('Upload skipped: choose a .pkl file first.', 'warn');
+          return;
+        }
+
+        try {
+          const formData = new FormData();
+          formData.append('model_file', input.files[0]);
+          const result = await api('POST', '/model/upload', null, formData);
+          log(`Uploaded and registered ${result.active_version}`, 'success');
+          input.value = '';
+          await refreshAll();
+        } catch (err) {
+          log(`Upload failed: ${err.message}`, 'error');
+        }
+      }
+
+      async function deleteSelectedVersion() {
+        const versionName = document.getElementById('versionSelect').value;
+        if (!versionName) {
+          log('Delete skipped: choose a local version first.', 'warn');
+          return;
+        }
+
+        if (!window.confirm(`Delete local version ${versionName}? This cannot be undone.`)) {
+          log('Delete selected version cancelled.', 'warn');
+          return;
+        }
+
+        try {
+          setBusy(true);
+          const result = await api('POST', '/model/delete-version', { version_name: versionName });
+          log(`Deleted version ${result.version_name}`, 'success');
+          await refreshAll();
+        } catch (err) {
+          log(`Delete selected failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function deleteFamily() {
+        if (!window.confirm('Delete all Employability-2 local model versions? This cannot be undone.')) {
+          log('Delete local family cancelled.', 'warn');
+          return;
+        }
+
+        try {
+          setBusy(true);
+          await api('POST', '/model/delete-family');
+          log('Deleted Employability-2 local model family.', 'success');
+          document.getElementById('deployStatusCard').textContent = 'Idle';
+          await refreshAll();
+        } catch (err) {
+          log(`Delete family failed: ${err.message}`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function refreshComparisonChart() {
+        const testDataset = document.getElementById('testDataset').value;
+        const payload = await api('GET', `/compare-by-training-set?test_dataset=${testDataset}`);
+        const source = payload.comparison || {};
+        const labels = ['Set-1', 'Set-2', 'Set-3'];
+        const keys = ['set1', 'set2', 'set3'];
+
+        const metricMap = {
+          accuracy: '#2f66ff',
+          precision: '#1ea97b',
+          recall: '#d88a22',
+          f1: '#1483aa',
+        };
+
+        const datasets = Object.keys(metricMap).map((metric) => ({
+          label: metric.toUpperCase(),
+          data: keys.map((k) => {
+            const node = source[k];
+            return node && node.metrics ? Number((node.metrics[metric] * 100).toFixed(2)) : null;
+          }),
+          borderColor: metricMap[metric],
+          backgroundColor: `${metricMap[metric]}cc`,
+          borderWidth: 2,
+          borderRadius: 6,
+          pointRadius: 3,
+          tension: 0.2,
+          fill: state.compareMode === 'radar',
+        }));
+
+        const ctx = document.getElementById('comparisonChart');
+        if (state.comparisonChart) state.comparisonChart.destroy();
+        state.comparisonChart = new Chart(ctx, {
+          type: state.compareMode,
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top' },
+            },
+            scales: state.compareMode === 'radar'
+              ? {
+                  r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { stepSize: 20, backdropColor: 'transparent', callback: (v) => `${v}%` },
+                  },
+                }
+              : {
+                  y: {
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                    ticks: { callback: (v) => `${v}%` },
+                  },
+                },
+          },
+        });
+      }
+
+      function renderActiveEvalChart(evaluationBySet) {
+        const labels = ['Test Set-1', 'Test Set-2', 'Test Set-3'];
+        const keys = ['set1', 'set2', 'set3'];
+        const colors = {
+          accuracy: '#2f66ff',
+          precision: '#1ea97b',
+          recall: '#d88a22',
+          f1: '#1483aa',
+        };
+
+        const datasets = Object.keys(colors).map((metric) => ({
+          label: metric.toUpperCase(),
+          data: keys.map((k) => {
+            const node = evaluationBySet?.[k];
+            return node ? Number((node[metric] * 100).toFixed(2)) : null;
+          }),
+          borderColor: colors[metric],
+          backgroundColor: `${colors[metric]}33`,
+          fill: false,
+          tension: 0.22,
+          spanGaps: true,
+          borderWidth: 2,
+          pointRadius: 4,
+        }));
+
+        const ctx = document.getElementById('activeEvalChart');
+        if (state.activeEvalChart) state.activeEvalChart.destroy();
+        state.activeEvalChart = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                suggestedMax: 100,
+                ticks: { callback: (v) => `${v}%` },
+              },
+            },
+          },
+        });
+      }
+
+      function renderVersionSourceChart(versions) {
+        const modeCounts = {};
+        versions.forEach((item) => {
+          const mode = item.metadata?.mode || 'unknown';
+          modeCounts[mode] = (modeCounts[mode] || 0) + 1;
+        });
+
+        const labels = Object.keys(modeCounts);
+        const data = Object.values(modeCounts);
+        const palette = ['#2f66ff', '#1ea97b', '#d88a22', '#1483aa', '#d84f4f', '#6b7e90'];
+        const colors = labels.map((_, idx) => palette[idx % palette.length]);
+
+        const ctx = document.getElementById('versionSourceChart');
+        if (state.versionSourceChart) state.versionSourceChart.destroy();
+        state.versionSourceChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels.length ? labels : ['no_versions'],
+            datasets: [{
+              data: data.length ? data : [1],
+              backgroundColor: data.length ? colors : ['#c7d4df'],
+              borderWidth: 1,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+            },
+          },
+        });
+      }
+
+      function renderVersions(versions, activeVersionName) {
+        const body = document.getElementById('versionTableBody');
+        const select = document.getElementById('versionSelect');
+        body.innerHTML = '';
+        select.innerHTML = '';
+
+        if (!versions.length) {
+          body.innerHTML = '<tr><td colspan="6">No local versions registered yet.</td></tr>';
+          select.innerHTML = '<option value="">No versions</option>';
+          return;
+        }
+
+        const ordered = [...versions].sort((a, b) => b.version - a.version);
+        ordered.forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.version_name;
+          option.textContent = item.version_name;
+          if (item.version_name === activeVersionName) option.selected = true;
+          select.appendChild(option);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.version_name}</td>
+            <td>${item.metadata?.dataset || '-'}</td>
+            <td>${item.metadata?.mode || '-'}</td>
+            <td>${item.created_utc || '-'}</td>
+            <td>${kb(item.size_bytes)}</td>
+            <td>${item.path || '-'}</td>
+          `;
+          body.appendChild(tr);
+        });
+      }
+
+      async function refreshStatusAndCharts() {
+        const status = await api('GET', '/status');
+        const active = status.active_model || null;
+        const versions = status.versions || [];
+        const activeVersionName = active?.version_name || 'none';
+        const activePath = active?.path || 'none';
+
+        document.getElementById('activeVersionText').textContent = activeVersionName;
+        document.getElementById('activePathText').textContent = activePath;
+        document.getElementById('activeVersionCard').textContent = activeVersionName;
+        document.getElementById('activePathCard').textContent = `Local path: ${activePath}`;
+        document.getElementById('versionCountCard').textContent = String(versions.length);
+
+        renderVersions(versions, activeVersionName);
+        renderActiveEvalChart(status.evaluation_by_set || {});
+        renderVersionSourceChart(versions);
+
+        const badge = document.getElementById('serviceBadge');
+        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i>Service Online';
+      }
+
+      async function refreshAll() {
+        await refreshStatusAndCharts();
+        await refreshComparisonChart();
+      }
+
+      document.getElementById('testDataset').addEventListener('change', async () => {
+        try {
+          await evaluateActive();
+          await refreshComparisonChart();
+        } catch (err) {
+          log(`Dataset switch error: ${err.message}`, 'error');
+        }
+      });
+
+      (async () => {
+        log('Employability-2 dashboard initialized.', 'info');
+        try {
+          await refreshAll();
+          await evaluateActive();
+        } catch (err) {
+          log(`Initialization warning: ${err.message}`, 'warn');
+        }
+      })();
+    </script>
+  </body>
+</html>
+

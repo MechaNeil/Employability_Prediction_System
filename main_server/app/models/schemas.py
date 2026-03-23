@@ -17,7 +17,7 @@ class TrainMainRequest(BaseModel):
 
 
 class RetrainTargetsRequest(BaseModel):
-    targets: list[str] = Field(default_factory=lambda: ["hospital_1", "hospital_2"])
+    targets: list[str] = Field(default_factory=lambda: ["employability_1", "employability_2"])
     dataset: str = Field(default="set2")
 
 
@@ -39,3 +39,4 @@ class DeleteModelVersionRequest(BaseModel):
 
 class DeleteModelFamilyRequest(BaseModel):
     model_family: str
+
