@@ -6,23 +6,15 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 
 from main_server.app.core.config import GLOBAL_MODEL_PATH
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
-from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
+from shared.datasets import get_all_test_dataset_paths
 
 
-def evaluate_global_model(dataset: str = "all") -> dict[str, object]:
+def evaluate_global_model() -> dict[str, float]:
     if not GLOBAL_MODEL_PATH.exists():
         raise FileNotFoundError("Global model does not exist. Run /aggregate first.")
 
     model = joblib.load(GLOBAL_MODEL_PATH)
-    dataset_key = dataset.strip().lower().replace("-", "")
-    if dataset_key == "all":
-        test_paths = get_all_test_dataset_paths()
-        selected_dataset = "all"
-    else:
-        selected_dataset = normalize_dataset_key(dataset)
-        test_paths = [get_dataset_path(selected_dataset, purpose="test")]
-
-    test_frames = [pd.read_csv(path) for path in test_paths]
+    test_frames = [pd.read_csv(path) for path in get_all_test_dataset_paths()]
     df = pd.concat(test_frames, ignore_index=True)
 
     x = df[FEATURE_COLUMNS]
@@ -30,15 +22,9 @@ def evaluate_global_model(dataset: str = "all") -> dict[str, object]:
 
     preds = model.predict(x)
 
-    metrics = {
+    return {
         "accuracy": float(accuracy_score(y, preds)),
         "precision": float(precision_score(y, preds, zero_division=0)),
         "recall": float(recall_score(y, preds, zero_division=0)),
         "f1": float(f1_score(y, preds, zero_division=0)),
-    }
-
-    return {
-        "dataset": selected_dataset,
-        "rows_evaluated": int(len(df)),
-        "metrics": metrics,
     }

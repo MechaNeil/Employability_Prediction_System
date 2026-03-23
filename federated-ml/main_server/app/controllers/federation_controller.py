@@ -45,8 +45,8 @@ def retrain_remote_models(targets: list[str], dataset: str = "set2") -> dict[str
     return retrain_hospitals(targets=targets, dataset=dataset)
 
 
-def evaluate_model(dataset: str = "all") -> dict[str, object]:
-    return evaluate_global_model(dataset=dataset)
+def evaluate_model() -> dict[str, float]:
+    return evaluate_global_model()
 
 
 def predict_model(records: list[dict[str, float]]) -> dict[str, object]:

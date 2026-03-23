@@ -71,9 +71,9 @@ def retrain_remote(payload: RetrainTargetsRequest) -> dict[str, object]:
 
 
 @router.get("/evaluate")
-def evaluate(dataset: str = "all") -> dict[str, object]:
+def evaluate() -> dict[str, float]:
     try:
-        return federation_controller.evaluate_model(dataset=dataset)
+        return federation_controller.evaluate_model()
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
