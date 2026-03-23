@@ -1160,6 +1160,7 @@
           let lastEvaluationSignature = null;
           let versionCompareChart = null;
           let cachedRegistry = null;
+          let statusRefreshInFlight = null;
 
           function writeLog(message, kind = 'info') {
             const stamp = new Date().toLocaleTimeString();
@@ -1533,8 +1534,13 @@
           }
 
           async function refreshStatus() {
-            try {
-              const status = await fetch('/status').then((r) => r.json());
+            if (statusRefreshInFlight) {
+              return statusRefreshInFlight;
+            }
+
+            statusRefreshInFlight = (async () => {
+              try {
+                const status = await fetch('/status').then((r) => r.json());
               const h1 = status.hospitals?.hospital_1?.online === true;
               const h2 = status.hospitals?.hospital_2?.online === true;
               const mainReady = status.models?.base_model?.exists === true;
@@ -1596,10 +1602,15 @@
                 h2Pct ? Number(h2Pct) : null,
                 globalPct ? Number(globalPct) : null,
               );
-            } catch (error) {
-              setWorkflowState('Status Fetch Failed', 'bad', 0, 'Unable to reach status endpoint.');
-              writeLog(`Status refresh failed: ${error}`, 'error');
-            }
+              } catch (error) {
+                setWorkflowState('Status Fetch Failed', 'bad', 0, 'Unable to reach status endpoint.');
+                writeLog(`Status refresh failed: ${error}`, 'error');
+              } finally {
+                statusRefreshInFlight = null;
+              }
+            })();
+
+            return statusRefreshInFlight;
           }
 
           async function runAction(action) {
@@ -1624,14 +1635,14 @@
                 throw new Error(body.detail || JSON.stringify(body));
               }
               writeLog(`${action.toUpperCase()} success: ${JSON.stringify(body)}`, 'success');
-              await refreshStatus();
+              refreshStatus();
             } catch (error) {
               setWorkflowState('Workflow Error', 'bad', 20, `Action failed while ${actionText(action).toLowerCase()}.`);
               writeLog(`${action.toUpperCase()} failed: ${error}`, 'error');
             } finally {
               isActionInFlight = false;
               setButtonsBusy(false);
-              await refreshStatus();
+              refreshStatus();
             }
           }
 

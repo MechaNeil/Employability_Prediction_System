@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +27,35 @@ from main_server.app.services.evaluation import evaluate_global_model
 from main_server.app.services.model_registry import get_registry_overview
 from shared.constants import FEATURE_COLUMNS, TARGET_COLUMN
 from shared.datasets import get_all_test_dataset_paths, get_dataset_path, normalize_dataset_key
+
+
+def _default_comparison() -> dict[str, float | None]:
+    return {
+        "main": None,
+        "hospital_1": None,
+        "hospital_2": None,
+        "global": None,
+    }
+
+
+def _default_model_metrics() -> dict[str, dict[str, float] | None]:
+    return {
+        "main": None,
+        "hospital_1": None,
+        "hospital_2": None,
+        "global": None,
+    }
+
+
+_STATUS_REFRESH_MIN_SECONDS = 12
+_CACHE_LOCK = threading.Lock()
+_STATUS_CACHE: dict[str, Any] = {
+    "metrics": {"available": False, "reason": "No evaluation available yet."},
+    "comparison": _default_comparison(),
+    "model_metrics": _default_model_metrics(),
+    "last_refresh_utc": None,
+    "refreshing": False,
+}
 
 
 def _model_info(path: Path) -> dict[str, object]:
@@ -165,27 +196,91 @@ def get_model_metric_comparison() -> dict[str, dict[str, float] | None]:
     }
 
 
-def get_system_status() -> dict[str, object]:
-    metrics: dict[str, object]
+def _compute_expensive_snapshot() -> dict[str, Any]:
     try:
-        metrics = evaluate_global_model()
+        metrics: dict[str, object] = evaluate_global_model()
     except Exception as exc:  # noqa: BLE001
         metrics = {"available": False, "reason": str(exc)}
 
-    versions = get_model_versions()
     comparison = get_performance_comparison()
     model_metrics = get_model_metric_comparison()
+    return {
+        "metrics": metrics,
+        "comparison": comparison,
+        "model_metrics": model_metrics,
+        "last_refresh_utc": datetime.now(tz=timezone.utc).isoformat(),
+    }
+
+
+def _refresh_cache_worker() -> None:
+    snapshot: dict[str, Any] | None = None
+    try:
+        snapshot = _compute_expensive_snapshot()
+    finally:
+        with _CACHE_LOCK:
+            if snapshot is not None:
+                _STATUS_CACHE.update(snapshot)
+            _STATUS_CACHE["refreshing"] = False
+
+
+def trigger_status_refresh(force: bool = False) -> None:
+    with _CACHE_LOCK:
+        last_refresh = _STATUS_CACHE.get("last_refresh_utc")
+        stale = True
+        if isinstance(last_refresh, str):
+            try:
+                parsed = datetime.fromisoformat(last_refresh)
+                stale = (datetime.now(tz=timezone.utc) - parsed).total_seconds() >= _STATUS_REFRESH_MIN_SECONDS
+            except ValueError:
+                stale = True
+
+        if not force and not stale:
+            return
+        if _STATUS_CACHE["refreshing"]:
+            return
+        _STATUS_CACHE["refreshing"] = True
+
+    thread = threading.Thread(target=_refresh_cache_worker, daemon=True)
+    thread.start()
+
+
+def cache_latest_evaluation(metrics: dict[str, object]) -> None:
+    with _CACHE_LOCK:
+        _STATUS_CACHE["metrics"] = metrics
+        _STATUS_CACHE["last_refresh_utc"] = datetime.now(tz=timezone.utc).isoformat()
+
+
+def get_system_status() -> dict[str, object]:
+    versions = get_model_versions()
+    trigger_status_refresh(force=False)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        hospital_1_future = executor.submit(_service_health, HOSPITAL_1_HEALTH_URL)
+        hospital_2_future = executor.submit(_service_health, HOSPITAL_2_HEALTH_URL)
+        hospital_1 = hospital_1_future.result()
+        hospital_2 = hospital_2_future.result()
+
+    with _CACHE_LOCK:
+        metrics = dict(_STATUS_CACHE.get("metrics") or {})
+        comparison = dict(_STATUS_CACHE.get("comparison") or _default_comparison())
+        model_metrics = dict(_STATUS_CACHE.get("model_metrics") or _default_model_metrics())
+        cache_refreshing = bool(_STATUS_CACHE.get("refreshing"))
+        cache_last_refresh = _STATUS_CACHE.get("last_refresh_utc")
 
     return {
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
         "hospitals": {
-            "hospital_1": _service_health(HOSPITAL_1_HEALTH_URL),
-            "hospital_2": _service_health(HOSPITAL_2_HEALTH_URL),
+            "hospital_1": hospital_1,
+            "hospital_2": hospital_2,
         },
         "models": versions,
         "metrics": metrics,
         "comparison": comparison,
         "model_metrics": model_metrics,
+        "status_cache": {
+            "refreshing": cache_refreshing,
+            "last_refresh_utc": cache_last_refresh,
+        },
     }
 
 

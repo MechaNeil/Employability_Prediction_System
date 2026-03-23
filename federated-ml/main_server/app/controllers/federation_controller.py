@@ -8,7 +8,13 @@ from main_server.app.services.orchestration import (
     forward_uploaded_model,
     retrain_hospitals,
 )
-from main_server.app.services.status import compare_named_versions, get_model_versions, get_system_status
+from main_server.app.services.status import (
+    cache_latest_evaluation,
+    compare_named_versions,
+    get_model_versions,
+    get_system_status,
+    trigger_status_refresh,
+)
 from main_server.app.services.training import train_main_model
 from main_server.app.views.dashboard_view import get_dashboard_html
 
@@ -46,7 +52,10 @@ def retrain_remote_models(targets: list[str], dataset: str = "set2") -> dict[str
 
 
 def evaluate_model(dataset: str = "all") -> dict[str, object]:
-    return evaluate_global_model(dataset=dataset)
+    result = evaluate_global_model(dataset=dataset)
+    cache_latest_evaluation(result)
+    trigger_status_refresh(force=True)
+    return result
 
 
 def predict_model(records: list[dict[str, float]]) -> dict[str, object]:
