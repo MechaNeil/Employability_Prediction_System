@@ -7,7 +7,14 @@ Federated Learning implementation using:
 - Docker Compose for hospital node simulation
 - Local machine for central orchestration
 
-This project trains a base model, distributes learning to two hospital nodes, aggregates the resulting models into a new global model, and evaluates global performance.
+This project uses a main-model-centric federated loop:
+
+1. Train a base model on main_server
+2. Push that main model to hospital_1 and hospital_2 as their local base
+3. Retrain locally in each hospital
+4. Deploy latest hospital models back to main_server
+5. Aggregate contributors to create the next trainable main_model version
+6. Push the updated main_model again and repeat the cycle
 
 ## 1. System Overview
 
@@ -17,17 +24,17 @@ Build a privacy-preserving, distributed learning workflow where each hospital tr
 
 ### High-Level Architecture
 
-- `main_server` (local): orchestration, aggregation, evaluation, dashboard
-- `hospital_1` (docker): local retraining on Set-2
-- `hospital_2` (docker): local retraining on Set-3
-- `shared`: dataset split and schema constants
-- `dataset`: generated split outputs in set folders (`Set-1`, `Set-2`, `Set-3`)
+- main_server (local): orchestration, aggregation, evaluation, dashboard, model registry
+- hospital_1 (docker): local train/retrain/evaluate/deploy/delete for hospital_1_model
+- hospital_2 (docker): local train/retrain/evaluate/deploy/delete for hospital_2_model
+- shared: dataset split and schema constants
+- dataset: generated split outputs in set folders (Set-1, Set-2, Set-3)
 
 ### Why this is Federated
 
 - Training is distributed across institutions.
-- The central server aggregates model behavior instead of pooling raw data during orchestration.
-- Hospitals expose model artifacts through controlled endpoints.
+- Hospitals never send raw training data to main_server.
+- Main_server coordinates model artifact exchange and version progression.
 
 ## 2. Project Structure
 
@@ -40,21 +47,33 @@ federated-ml/
 │       ├── services/
 │       │   ├── training.py
 │       │   ├── aggregation.py
+│       │   ├── orchestration.py
 │       │   ├── evaluation.py
 │       │   ├── inference.py
-│       │   └── status.py
-│       ├── views/model_view.py
+│       │   ├── status.py
+│       │   └── model_registry.py
+│       ├── views/templates/dashboard.html
 │       └── main.py
 ├── hospital_1/
 │   └── app/
 │       ├── api/routes.py
-│       ├── views/model_view.py
-│       └── services/training.py
+│       ├── core/config.py
+│       ├── services/
+│       │   ├── training.py
+│       │   ├── deployment.py
+│       │   └── model_registry.py
+│       ├── views/templates/dashboard.html
+│       └── main.py
 ├── hospital_2/
 │   └── app/
 │       ├── api/routes.py
-│       ├── views/model_view.py
-│       └── services/training.py
+│       ├── core/config.py
+│       ├── services/
+│       │   ├── training.py
+│       │   ├── deployment.py
+│       │   └── model_registry.py
+│       ├── views/templates/dashboard.html
+│       └── main.py
 ├── shared/
 │   ├── constants.py
 │   └── data_split.py
@@ -65,22 +84,22 @@ federated-ml/
 
 ## 3. Data Pipeline
 
-Source dataset: `Student-Employability-Datasets.csv`
+Source dataset: Student-Employability-Datasets.csv
 
 ### Split Strategy
 
-1. Remove non-feature column: `Name of Student`
+1. Remove non-feature column: Name of Student
 2. Map target labels:
-	 - `LessEmployable -> 0`
-	 - `Employable -> 1`
+   - LessEmployable -> 0
+   - Employable -> 1
 3. Stratified split full dataset into federated set totals:
-	 - Set-1 total: 1250
-	 - Set-2 total: 1000
-	 - Set-3 total: 732
-4. Stratified split each set into train/test using an 80/20 ratio:
-	 - Set-1: 1000 train, 250 test
-	 - Set-2: 800 train, 200 test
-	 - Set-3: 586 train, 146 test
+   - Set-1 total: 1250
+   - Set-2 total: 1000
+   - Set-3 total: 732
+4. Stratified split each set into train/test using 80/20 ratio:
+   - Set-1: 1000 train, 250 test
+   - Set-2: 800 train, 200 test
+   - Set-3: 586 train, 146 test
 
 Current split summary from the dataset in this repository:
 
@@ -91,20 +110,14 @@ Current split summary from the dataset in this repository:
 | Set-3 | 586 | 146 | 732 |
 | Total | 2386 | 596 | 2982 |
 
-Implementation details:
-
-- Stratified sampling (`stratify=y`)
-- Deterministic seed (`random_state=42`)
-- Feature consistency validation before saving
-
 Generated files:
 
-- `dataset/Set-1/set-1_train_data.csv`
-- `dataset/Set-1/set-1_test_data.csv`
-- `dataset/Set-2/set-2_train_data.csv`
-- `dataset/Set-2/set-2_test_data.csv`
-- `dataset/Set-3/set-3_train_data.csv`
-- `dataset/Set-3/set-3_test_data.csv`
+- dataset/Set-1/set-1_train_data.csv
+- dataset/Set-1/set-1_test_data.csv
+- dataset/Set-2/set-2_train_data.csv
+- dataset/Set-2/set-2_test_data.csv
+- dataset/Set-3/set-3_train_data.csv
+- dataset/Set-3/set-3_test_data.csv
 
 Command:
 
@@ -112,146 +125,141 @@ Command:
 python -m shared.data_split
 ```
 
-## 4. Model Lifecycle
+## 4. Model Lifecycle (Current Architecture)
 
-### 4.1 Initial Main Model Training
+### 4.1 Main Model Training
 
-- Service: `main_server.app.services.training`
-- Algorithm: `RandomForestClassifier(n_estimators=100, random_state=42)`
-- Training data: `dataset/Set-1/set-1_train_data.csv`
-- Artifact output: `main_server/app/models/model.pkl`
+- Service: main_server.app.services.training
+- Algorithm: RandomForestClassifier(n_estimators=100, random_state=42)
+- Typical dataset: Set-1 train split
+- Writes canonical artifact: main_server/app/models/model.pkl
+- Registers new main_model version in registry
 
-Command:
+### 4.2 Push Base Model to Hospitals
 
-```bash
-python -m main_server.app.services.training
-```
+- Service: main_server.app.services.orchestration -> POST /deploy
+- Main server pushes active main_model artifact to:
+  - hospital_1 /model/upload
+  - hospital_2 /model/upload
+- Hospitals store uploaded artifact as new local active version
 
-### 4.2 Hospital Retraining
+### 4.3 Hospital Local Retraining
 
-Each hospital:
+Each hospital retrains locally using /train or /retrain:
 
-1. Loads latest available global model (`main_model_v2.pkl`), or falls back to base model (`model.pkl`)
-2. Retrains locally using:
-	 - Hospital-1 -> `dataset/Set-2/set-2_train_data.csv`
-	 - Hospital-2 -> `dataset/Set-3/set-3_train_data.csv`
-3. Saves local artifact:
-	 - `hospital_1/app/models/hospital_model.pkl`
-	 - `hospital_2/app/models/hospital_model.pkl`
+- hospital_1 default train dataset: Set-2
+- hospital_2 default train dataset: Set-3
+- retrain_from_main=true attempts to initialize from active main_model
+- if main model is unavailable, hospital falls back to local fresh train
 
-### 4.3 Aggregation
+### 4.4 Deploy Hospital Models Back to Main
 
-- Service: `main_server.app.services.aggregation`
-- Strategy: Majority voting ensemble over predictions from 3 models:
-	- main base model
-	- hospital_1 model
-	- hospital_2 model
-- Tie-break: class `1` is chosen when votes are equal
-- Output: `main_server/app/models/main_model_v2.pkl`
+- hospital_1: POST /deploy-to-main (model_family hospital_1_model)
+- hospital_2: POST /deploy-to-main (model_family hospital_2_model)
+- main_server stores uploaded versions in model registry
 
-### 4.4 Evaluation
+### 4.5 Aggregation Updates main_model (No global_model Family)
 
-- Service: `main_server.app.services.evaluation`
-- Dataset: combined test splits
-	 - `dataset/Set-1/set-1_test_data.csv`
-	 - `dataset/Set-2/set-2_test_data.csv`
-	 - `dataset/Set-3/set-3_test_data.csv`
-- Metrics:
-	- Accuracy
-	- Precision
-	- Recall
-	- F1-score
+- Service: main_server.app.services.aggregation
+- Aggregation uses contributors:
+  - current active main_model
+  - active hospital_1_model (if available)
+  - active hospital_2_model (if available)
+- Builds pseudo-label votes from contributors over combined train datasets
+- Trains a new RandomForest model from pseudo-labels
+- Registers result as next main_model version
+
+### 4.6 Evaluation
+
+- Service: main_server.app.services.evaluation
+- /evaluate evaluates active main_model
+- Supports all test sets combined or a selected set
+- Metrics: Accuracy, Precision, Recall, F1
 
 ## 5. Runtime Orchestration Flow
 
-### Sequence
+### Recommended Sequence
 
 1. Generate split files
-2. Train main model
-3. Start hospital containers
-4. Hospitals retrain automatically at startup
-5. Start main server
-6. Trigger aggregation endpoint
-7. Evaluate global model
+2. Start hospital containers
+3. Start main_server
+4. Train main model
+5. Push main model to hospitals
+6. Retrain in hospital_1 and hospital_2
+7. Deploy hospital models to main_server
+8. Aggregate to update main_model
+9. Re-push updated main_model and repeat
 
-### Inter-service Communication
+### Inter-service Communication Notes
 
-During `GET /aggregate`, main server performs:
-
-1. `POST /retrain` on both hospitals
-2. `GET /model` from both hospitals
-3. Loads all models using `joblib`
-4. Builds majority-vote ensemble
-5. Saves global model
-6. Computes evaluation metrics
-
-### Reliability Features
-
-- Retry with exponential backoff for hospital requests
-- Configurable request retries and timeout using env vars:
-	- `REQUEST_RETRIES`
-	- `REQUEST_TIMEOUT_SECONDS`
-- Structured orchestration logs in main server
+- main_server -> hospitals for base push uses /model/upload
+- hospitals -> main_server for return deploy uses /remote-models/upload
+- Hospitals include URL fallbacks for main upload endpoint:
+  - host.docker.internal
+  - main_server
+  - localhost
 
 ## 6. API Reference
 
 ### Main Server (port 8000)
 
-- `GET /` -> Interactive dashboard
-- `GET /health` -> Main server status
-- `GET /status` -> Combined runtime status (hospitals, model artifacts, metrics)
-- `GET /model-version` -> Metadata for base/global model files
-- `POST /train` -> Train initial main model on Set-1
-- `POST /deploy` -> Simulate deployment of latest central model to hospitals
-- `POST /retrain-hospitals` -> Trigger retraining on both hospitals
-- `GET /aggregate` -> Trigger federated retrain + model aggregation
-- `GET /evaluate` -> Evaluate current global model on all three test splits
-- `POST /predict` -> Predict employability for provided records
-
-Sample `POST /predict` payload:
-
-```json
-{
-	"records": [
-		{
-			"GENERAL APPEARANCE": 4,
-			"MANNER OF SPEAKING": 4,
-			"PHYSICAL CONDITION": 4,
-			"MENTAL ALERTNESS": 4,
-			"SELF-CONFIDENCE": 4,
-			"ABILITY TO PRESENT IDEAS": 4,
-			"COMMUNICATION SKILLS": 4,
-			"Student Performance Rating": 5
-		}
-	]
-}
-```
+- GET / -> Interactive dashboard
+- GET /health -> Main server status
+- GET /status -> Combined runtime status (hospitals, model artifacts, metrics)
+- GET /model-version -> Registry overview
+- POST /train -> Train main model
+- POST /deploy -> Push active main_model to hospitals
+- POST /retrain-hospitals -> Informational endpoint (hospitals retrain locally)
+- GET /aggregate -> Aggregate contributors and update main_model
+- GET /evaluate -> Evaluate active main_model
+- POST /predict -> Predict employability for provided records
+- POST /remote-models/upload -> Receive uploaded models from hospitals/manual forward
+- POST /models/delete-version -> Delete selected version in a family
+- POST /models/delete-family -> Delete selected family
+- POST /models/delete-all -> Remove all model artifacts in main models directory
 
 ### Hospital Services (ports 8001, 8002)
 
-- `GET /health` -> Hospital status
-- `POST /retrain` -> Local retraining trigger
-- `GET /model` -> Return local model artifact as file response
+- GET /health -> Hospital status
+- GET /status -> Local hospital status and version/eval summaries
+- GET /model-version -> Active local version + all local versions
+- POST /train -> Local train/retrain based on payload
+- POST /retrain -> Retrain-focused endpoint (defaults per hospital)
+- POST /evaluate -> Evaluate active local model
+- POST /deploy-to-main -> Upload active local model to main_server
+- GET /model -> Download active local model artifact
+- POST /model/upload -> Upload model artifact into local registry
+- POST /model/activate -> Switch active local version
+- POST /model/delete-version -> Delete selected local version (local family only)
+- POST /model/delete-family -> Delete local family (local family only)
 
 ## 7. Dashboard Functionality
 
-Dashboard URL: `http://localhost:8000/`
+Main dashboard URL: http://localhost:8000/
 
-Features:
+### Main Dashboard Features
 
 - Live system status visualization
-- Main/Hospital/Global model cards
-- Action buttons for train/aggregate/evaluate
-- Workflow health indicators
-- Lightweight performance chart
-- Activity log with API outcomes
+- 3 model cards (Main, Hospital-1, Hospital-2)
+- Workflow timeline including aggregation state
+- Action controls for train, deploy, aggregate, evaluate
+- Version management (delete version/family/all)
+- Version comparison and activity logs
 - Poll-based status refresh
+
+### Hospital Dashboard Features
+
+- Local version registry view
+- Local train/retrain/evaluate
+- Activate local version
+- Deploy active local model to main_server
+- Delete selected local version or local family
 
 ## 8. Deployment and Run Guide
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.11+
 - Docker + Docker Compose plugin
 
 ### Commands
@@ -261,46 +269,58 @@ cd federated-ml
 pip install -r requirements.txt
 
 python -m shared.data_split
-python -m main_server.app.services.training
 
-docker compose up --build
+# start hospitals
+Docker compose up --build -d
 
+# start main server
 uvicorn main_server.app.main:app --host 0.0.0.0 --port 8000
 ```
 
-### Trigger full flow
+### Trigger one full federated cycle (example)
 
 ```bash
+# main train
 curl -X POST http://localhost:8000/train -H "Content-Type: application/json" -d '{"dataset":"set1"}'
+
+# push main model to hospitals
+curl -X POST http://localhost:8000/deploy
+
+# retrain locally at hospitals
 curl -X POST http://localhost:8001/retrain -H "Content-Type: application/json" -d '{"dataset":"set2","retrain_from_main":true}'
 curl -X POST http://localhost:8002/retrain -H "Content-Type: application/json" -d '{"dataset":"set3","retrain_from_main":true}'
+
+# deploy local hospital models back to main
+curl -X POST http://localhost:8001/deploy-to-main -H "Content-Type: application/json" -d '{}'
+curl -X POST http://localhost:8002/deploy-to-main -H "Content-Type: application/json" -d '{}'
+
+# aggregate and evaluate main
 curl http://localhost:8000/aggregate
 curl http://localhost:8000/evaluate
 ```
 
 ## 9. Key Functionalities Summary
 
-1. Federated-style training orchestration across two hospital nodes
+1. Main-model-centric federated lifecycle (no separate global_model family)
 2. Deterministic, stratified data preparation pipeline
-3. Automatic retraining in containers at startup
-4. Majority-vote global model aggregation for Random Forest compatibility
-5. Real-time dashboard monitoring of service/model health
-6. Prediction API for downstream integration
-7. End-to-end evaluation with core classification metrics
-8. Retry/backoff resilience for hospital communication
-9. Model version/status introspection endpoints
+3. Bi-directional model exchange between main and hospitals
+4. Trainable aggregated main_model version updates
+5. Main and hospital dashboards for monitoring and control
+6. Local-only delete controls on hospital model families
+7. End-to-end evaluation with classification metrics
+8. Registry-backed version tracking across all services
 
 ## 10. Known Limitations
 
-1. Aggregation is voting-based, not parameter averaging (by design for tree models).
+1. Aggregation is distillation-from-votes, not tree-parameter averaging.
 2. No authentication layer between services.
-3. No persistent database for experiment tracking.
-4. Hospitals currently read split files from shared project volume (simulation mode).
+3. No persistent external database for experiments.
+4. In mixed host/container setups, upload endpoint reachability still depends on environment networking.
 
 ## 11. Recommended Next Improvements
 
-1. Add weighted voting based on local validation performance.
-2. Add authentication (API key/token) for hospital endpoints.
-3. Add model registry/version history storage.
-4. Add structured JSON logging export and observability dashboards.
-5. Add automated tests for split integrity, endpoint contracts, and aggregation behavior.
+1. Add weighted contributor voting prior to distillation.
+2. Add authentication/authorization for inter-service APIs.
+3. Add integration tests for full cycle and failure paths.
+4. Add structured observability (metrics + traces + logs).
+5. Add CI checks for API contract and workflow regression.

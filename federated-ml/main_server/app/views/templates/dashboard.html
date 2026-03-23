@@ -150,7 +150,7 @@
 
           .cards {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
           }
 
@@ -466,7 +466,7 @@
 
           .chart {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             align-items: end;
             gap: 10px;
             min-height: 230px;
@@ -672,7 +672,7 @@
           .eval-grid {
             margin-top: 10px;
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
           }
 
@@ -936,23 +936,6 @@
                 <span id="h2Tag" class="tag pending">Pending</span>
               </article>
 
-              <article class="card" style="animation-delay:0.18s">
-                <div class="card-head">
-                  <div class="model-id">
-                    <span class="model-icon orange"><i class="fa-solid fa-earth-americas"></i></span>
-                    <div>
-                      <h4 class="model-name">Aggregated Main</h4>
-                      <div class="model-meta">
-                        <p class="model-sub">Aggregated Accuracy</p>
-                        <span id="globalVersion" class="model-version missing">No version</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="state updated"><i class="fa-solid fa-rocket"></i>updated</span>
-                </div>
-                <div id="globalAcc" class="metric orange">-</div>
-                <span id="globalTag" class="tag pending">Pending</span>
-              </article>
             </section>
 
             <section class="panel" style="margin-top:12px">
@@ -1241,7 +1224,6 @@
             main: { label: 'Main Model', border: '#2f66ff', fill: 'rgba(47, 102, 255, 0.20)' },
             hospital_1: { label: 'Hospital-1', border: '#10a86d', fill: 'rgba(16, 168, 109, 0.20)' },
             hospital_2: { label: 'Hospital-2', border: '#7a39d8', fill: 'rgba(122, 57, 216, 0.20)' },
-            aggregated_main: { label: 'Aggregated Main', border: '#f28a1b', fill: 'rgba(242, 138, 27, 0.22)' },
           };
           const metricLabels = ['Accuracy', 'Precision', 'Recall', 'F1 Score'];
           let isActionInFlight = false;
@@ -1338,7 +1320,6 @@
             setModelVersionChip('mainVersion', extractActiveVersion(registry, 'main_model'));
             setModelVersionChip('h1Version', extractActiveVersion(registry, 'hospital_1_model'));
             setModelVersionChip('h2Version', extractActiveVersion(registry, 'hospital_2_model'));
-            setModelVersionChip('globalVersion', extractActiveVersion(registry, 'main_model'));
           }
 
           function setWorkflowState(text, kind, progress, detail, indeterminate = false) {
@@ -1392,13 +1373,12 @@
             return (value * 100).toFixed(1);
           }
 
-          function renderBars(main, h1, h2, aggregatedMain) {
+          function renderBars(main, h1, h2) {
             const chart = document.getElementById('chart');
             const values = [
               { key: 'Main Model', value: main, color: 'blue' },
               { key: 'Hospital-1', value: h1, color: 'green' },
               { key: 'Hospital-2', value: h2, color: 'purple' },
-              { key: 'Aggregated Main', value: aggregatedMain, color: 'orange' },
             ];
 
             chart.innerHTML = values
@@ -1444,27 +1424,23 @@
             const main = fromBundle(modelMetrics.main);
             const h1 = fromBundle(modelMetrics.hospital_1);
             const h2 = fromBundle(modelMetrics.hospital_2);
-            const aggregatedMain = fromBundle(modelMetrics.aggregated_main);
 
             if (main[0] === null) main[0] = metricToPercent(comparison.main);
             if (h1[0] === null) h1[0] = metricToPercent(comparison.hospital_1);
             if (h2[0] === null) h2[0] = metricToPercent(comparison.hospital_2);
-            if (aggregatedMain[0] === null) aggregatedMain[0] = metricToPercent(comparison.aggregated_main);
-
-            if (aggregatedMain[1] === null) aggregatedMain[1] = metricToPercent(mainMetrics.precision);
-            if (aggregatedMain[2] === null) aggregatedMain[2] = metricToPercent(mainMetrics.recall);
-            if (aggregatedMain[3] === null) aggregatedMain[3] = metricToPercent(mainMetrics.f1);
+            if (main[1] === null) main[1] = metricToPercent(mainMetrics.precision);
+            if (main[2] === null) main[2] = metricToPercent(mainMetrics.recall);
+            if (main[3] === null) main[3] = metricToPercent(mainMetrics.f1);
 
             return {
               main,
               hospital_1: h1,
               hospital_2: h2,
-              aggregated_main: aggregatedMain,
             };
           }
 
           function buildEvaluationDatasets(metricsByModel) {
-            const order = ['main', 'hospital_1', 'hospital_2', 'aggregated_main'];
+            const order = ['main', 'hospital_1', 'hospital_2'];
             return order.map((key) => ({
               key,
               label: modelColors[key].label,
@@ -1739,19 +1715,16 @@
               const mainPct = toPercent(cmp.main);
               const h1Pct = toPercent(cmp.hospital_1);
               const h2Pct = toPercent(cmp.hospital_2);
-              const globalPct = toPercent(cmp.aggregated_main);
 
               document.getElementById('mainAcc').textContent = mainPct ? `${mainPct}%` : '-';
               document.getElementById('h1Acc').textContent = h1Pct ? `${h1Pct}%` : '-';
               document.getElementById('h2Acc').textContent = h2Pct ? `${h2Pct}%` : '-';
-              document.getElementById('globalAcc').textContent = globalPct ? `${globalPct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
               const h1TagText = !h1 ? 'Offline' : (localModelH1 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
               const h2TagText = !h2 ? 'Offline' : (localModelH2 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
               setTag('h1Tag', h1TagText, localModelH1);
               setTag('h2Tag', h2TagText, localModelH2);
-              setTag('globalTag', globalReady ? 'Aggregated' : 'Pending', globalReady);
 
               setState('h1State', h1 ? 'online' : 'offline', h1 ? 'online' : 'wait');
               setState('h2State', h2 ? 'online' : 'offline', h2 ? 'online' : 'wait');
@@ -1770,7 +1743,7 @@
               }
 
               const readyModels = Object.values(latestModelMetrics).filter((metrics) => metrics.every((m) => m !== null)).length;
-              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/4 model slots have complete metrics.`;
+              evaluationMeta.textContent = `Interactive evaluation on test set. ${readyModels}/3 model slots have complete metrics.`;
 
               updateWorkflowFromStatus(status);
 
@@ -1795,7 +1768,6 @@
                 mainPct ? Number(mainPct) : null,
                 h1Pct ? Number(h1Pct) : null,
                 h2Pct ? Number(h2Pct) : null,
-                globalPct ? Number(globalPct) : null,
               );
               } catch (error) {
                 setWorkflowState('Status Fetch Failed', 'bad', 0, 'Unable to reach status endpoint.');
