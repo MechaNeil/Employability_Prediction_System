@@ -201,9 +201,40 @@
           }
 
           .model-sub {
-            margin: 4px 0 0;
+            margin: 0;
             font-size: 12px;
             color: var(--muted);
+          }
+
+          .model-meta {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          .model-version {
+            display: inline-flex;
+            align-items: center;
+            max-width: 170px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #d7e0f4;
+            background: #edf1fb;
+            color: #38517f;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .model-version.missing {
+            border-color: #dfe6f5;
+            background: #f1f4fb;
+            color: #74809a;
           }
 
           .state {
@@ -404,6 +435,22 @@
           .a3 { background: linear-gradient(90deg, #f28a1b, #d36f12); }
           .a4 { background: linear-gradient(90deg, #7a39d8, #632abf); }
           .a5 { background: linear-gradient(90deg, #3f4d68, #2b354b); }
+          .a6 { background: linear-gradient(90deg, #d74c3f, #b32d21); }
+          .a7 { background: linear-gradient(90deg, #b6501c, #913b12); }
+
+          .delete-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .delete-actions {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 9px;
+          }
 
           .row {
             margin-top: 12px;
@@ -773,7 +820,9 @@
             .train-controls,
             .retrain-controls,
             .train-actions,
-            .retrain-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .retrain-actions,
+            .delete-grid,
+            .delete-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .control-block.wide { grid-column: span 2; }
             .version-compare-grid { grid-template-columns: 1fr; }
           }
@@ -789,7 +838,9 @@
             .train-controls,
             .retrain-controls,
             .train-actions,
-            .retrain-actions { grid-template-columns: 1fr; }
+            .retrain-actions,
+            .delete-grid,
+            .delete-actions { grid-template-columns: 1fr; }
             .control-block.wide { grid-column: auto; }
             .chart { min-height: 220px; }
             .metric { font-size: 32px; }
@@ -837,7 +888,10 @@
                     <span class="model-icon blue"><i class="fa-solid fa-brain"></i></span>
                     <div>
                       <h4 class="model-name">Main Model</h4>
-                      <p class="model-sub">Accuracy (Set-1)</p>
+                      <div class="model-meta">
+                        <p class="model-sub">Accuracy (Set-1)</p>
+                        <span id="mainVersion" class="model-version missing">No version</span>
+                      </div>
                     </div>
                   </div>
                   <span class="state updated"><i class="fa-solid fa-wand-magic-sparkles"></i>updated</span>
@@ -852,7 +906,10 @@
                     <span class="model-icon green"><i class="fa-solid fa-hospital"></i></span>
                     <div>
                       <h4 class="model-name">Hospital-1</h4>
-                      <p class="model-sub">Local Model</p>
+                      <div class="model-meta">
+                        <p class="model-sub">Local Model</p>
+                        <span id="h1Version" class="model-version missing">No version</span>
+                      </div>
                     </div>
                   </div>
                   <span id="h1State" class="state wait"><i class="fa-solid fa-circle"></i>offline</span>
@@ -867,7 +924,10 @@
                     <span class="model-icon purple"><i class="fa-solid fa-hospital-user"></i></span>
                     <div>
                       <h4 class="model-name">Hospital-2</h4>
-                      <p class="model-sub">Local Model</p>
+                      <div class="model-meta">
+                        <p class="model-sub">Local Model</p>
+                        <span id="h2Version" class="model-version missing">No version</span>
+                      </div>
                     </div>
                   </div>
                   <span id="h2State" class="state wait"><i class="fa-solid fa-circle"></i>offline</span>
@@ -882,10 +942,13 @@
                     <span class="model-icon orange"><i class="fa-solid fa-earth-americas"></i></span>
                     <div>
                       <h4 class="model-name">Global Model</h4>
-                      <p class="model-sub">Accuracy (v2)</p>
+                      <div class="model-meta">
+                        <p class="model-sub">Global Accuracy</p>
+                        <span id="globalVersion" class="model-version missing">No version</span>
+                      </div>
                     </div>
                   </div>
-                  <span class="state updated"><i class="fa-solid fa-rocket"></i>v2</span>
+                  <span class="state updated"><i class="fa-solid fa-rocket"></i>updated</span>
                 </div>
                 <div id="globalAcc" class="metric orange">-</div>
                 <span id="globalTag" class="tag pending">Pending</span>
@@ -1078,6 +1141,40 @@
             </section>
 
             <section class="panel" style="margin-top:12px">
+              <h3 class="panel-title">Model Deletion</h3>
+              <p class="action-section-sub" style="margin:0 0 6px;">Choose model family and version to delete specific artifacts, or wipe all model files for a complete clean start.</p>
+              <div class="delete-grid">
+                <div class="control-block">
+                  <label class="control-label" for="deleteFamily">Model Family</label>
+                  <select id="deleteFamily" class="control-input" onchange="populateDeleteVersionSelect()">
+                    <option value="main_model">Main Model</option>
+                    <option value="global_model">Global Model</option>
+                    <option value="hospital_1_model">Hospital-1 Model</option>
+                    <option value="hospital_2_model">Hospital-2 Model</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <label class="control-label" for="deleteVersion">Model Version</label>
+                  <select id="deleteVersion" class="control-input"></select>
+                </div>
+              </div>
+              <div class="delete-actions">
+                <button class="action a6" id="btnDeleteVersion" onclick="runDeleteAction('version')">
+                  <div class="action-title"><i class="fa-solid fa-file-circle-xmark"></i>Delete Selected Version</div>
+                  <div class="action-sub">Remove chosen version artifact and update registry</div>
+                </button>
+                <button class="action a7" id="btnDeleteFamily" onclick="runDeleteAction('family')">
+                  <div class="action-title"><i class="fa-solid fa-folder-minus"></i>Delete Family</div>
+                  <div class="action-sub">Remove every version under selected model family</div>
+                </button>
+                <button class="action a5" id="btnDeleteAll" onclick="runDeleteAction('all')">
+                  <div class="action-title"><i class="fa-solid fa-trash-can"></i>Delete All Model Files</div>
+                  <div class="action-sub">Full reset of main server model artifacts</div>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel" style="margin-top:12px">
               <div class="eval-head">
                 <h3 class="panel-title" style="margin-bottom:0">Version Comparison</h3>
                 <div class="eval-controls">
@@ -1161,6 +1258,7 @@
           let versionCompareChart = null;
           let cachedRegistry = null;
           let statusRefreshInFlight = null;
+          let workflowCompletionNotice = null;
 
           function writeLog(message, kind = 'info') {
             const stamp = new Date().toLocaleTimeString();
@@ -1212,6 +1310,40 @@
               };
             }
             return null;
+          }
+
+          function extractActiveVersion(registry, family) {
+            const active = registry?.[family]?.active;
+            if (!active) {
+              return null;
+            }
+            if (typeof active === 'string') {
+              return active;
+            }
+            return active.version_name || null;
+          }
+
+          function setModelVersionChip(id, versionName) {
+            const node = document.getElementById(id);
+            if (!node) return;
+
+            if (versionName) {
+              node.textContent = versionName;
+              node.title = versionName;
+              node.className = 'model-version';
+              return;
+            }
+
+            node.textContent = 'No version';
+            node.title = '';
+            node.className = 'model-version missing';
+          }
+
+          function renderModelVersionChips(registry) {
+            setModelVersionChip('mainVersion', extractActiveVersion(registry, 'main_model'));
+            setModelVersionChip('h1Version', extractActiveVersion(registry, 'hospital_1_model'));
+            setModelVersionChip('h2Version', extractActiveVersion(registry, 'hospital_2_model'));
+            setModelVersionChip('globalVersion', extractActiveVersion(registry, 'global_model'));
           }
 
           function setWorkflowState(text, kind, progress, detail, indeterminate = false) {
@@ -1468,7 +1600,7 @@
           }
 
           function setButtonsBusy(isBusy) {
-            ['btnTrain', 'btnDeploy', 'btnRetrain', 'btnAggregate', 'btnEvaluate', 'btnUploadForward', 'btnCompareVersions'].forEach((id) => {
+            ['btnTrain', 'btnDeploy', 'btnRetrain', 'btnAggregate', 'btnEvaluate', 'btnUploadForward', 'btnCompareVersions', 'btnDeleteVersion', 'btnDeleteFamily', 'btnDeleteAll'].forEach((id) => {
               const button = document.getElementById(id);
               if (button) {
                 button.disabled = isBusy;
@@ -1494,6 +1626,40 @@
             return 'Processing action';
           }
 
+          function completionText(action) {
+            if (action === 'train') return 'Main Model Training Complete';
+            if (action === 'deploy') return 'Deployment Complete';
+            if (action === 'retrain-hospitals') return 'Retraining Complete';
+            if (action === 'aggregate') return 'Aggregation Complete';
+            if (action === 'evaluate') return 'Evaluation Complete';
+            if (action === 'upload-forward') return 'Upload Forward Complete';
+            if (action === 'delete-version') return 'Version Deleted';
+            if (action === 'delete-family') return 'Model Family Deleted';
+            if (action === 'delete-all') return 'All Model Files Deleted';
+            return 'Action Complete';
+          }
+
+          function completionDetail(action) {
+            if (action === 'train') return 'Main model training finished successfully.';
+            if (action === 'deploy') return 'Latest model deployed to available hospitals.';
+            if (action === 'retrain-hospitals') return 'Requested retraining job completed successfully.';
+            if (action === 'aggregate') return 'Global model aggregation completed successfully.';
+            if (action === 'evaluate') return 'Global model evaluation completed successfully.';
+            if (action === 'upload-forward') return 'Model upload and forwarding completed successfully.';
+            if (action === 'delete-version') return 'Selected model version was deleted.';
+            if (action === 'delete-family') return 'Selected model family and all versions were deleted.';
+            if (action === 'delete-all') return 'All model files were deleted from main server.';
+            return 'Requested workflow action completed successfully.';
+          }
+
+          function setWorkflowCompletionNotice(action) {
+            workflowCompletionNotice = {
+              text: completionText(action),
+              detail: completionDetail(action),
+              expiresAt: Date.now() + 8000,
+            };
+          }
+
           function updateWorkflowFromStatus(status) {
             const h1 = status.hospitals?.hospital_1?.online === true;
             const h2 = status.hospitals?.hospital_2?.online === true;
@@ -1503,10 +1669,16 @@
             const localModelH1 = cmp.hospital_1 !== null && cmp.hospital_1 !== undefined;
             const localModelH2 = cmp.hospital_2 !== null && cmp.hospital_2 !== undefined;
 
+            const h1Fetching = h1 && !localModelH1;
+            const h2Fetching = h2 && !localModelH2;
+            const fetchingHospitals = [];
+            if (h1Fetching) fetchingHospitals.push('Hospital-1');
+            if (h2Fetching) fetchingHospitals.push('Hospital-2');
+
             setStep('stepMain', mainReady ? 'ok' : 'pending');
             setStep('stepDeploy', mainReady && h1 && h2 ? 'ok' : (mainReady ? 'pending' : 'bad'));
-            setStep('stepH1', h1 ? 'ok' : 'bad');
-            setStep('stepH2', h2 ? 'ok' : 'bad');
+            setStep('stepH1', h1 ? (localModelH1 ? 'ok' : 'pending') : 'bad');
+            setStep('stepH2', h2 ? (localModelH2 ? 'ok' : 'pending') : 'bad');
             setStep('stepGlobal', globalReady ? 'ok' : 'pending');
 
             setStepStatus('stepMainState', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
@@ -1515,15 +1687,25 @@
             setStepStatus('stepH2State', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline', h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline');
             setStepStatus('stepGlobalState', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
 
-            const completed = [mainReady, mainReady && h1 && h2, h1, h2, globalReady].filter(Boolean).length;
+            const completed = [mainReady, mainReady && h1 && h2, localModelH1, localModelH2, globalReady].filter(Boolean).length;
             const progress = completed * 20;
+
+            if (workflowCompletionNotice && Date.now() > workflowCompletionNotice.expiresAt) {
+              workflowCompletionNotice = null;
+            }
 
             if (isActionInFlight) {
               setWorkflowState('Workflow Processing', 'processing', Math.max(progress, 35), 'Action is currently running...', true);
+            } else if (workflowCompletionNotice) {
+              setWorkflowState(workflowCompletionNotice.text, 'good', Math.max(progress, 60), workflowCompletionNotice.detail);
             } else if (!h1 && !h2) {
               setWorkflowState('Offline Services', 'bad', progress, 'Both hospitals are offline. Start hospital services first.');
             } else if (!h1 || !h2) {
               setWorkflowState('Partial Connectivity', 'warn', progress, 'One hospital is offline. Workflow is degraded.');
+            } else if (fetchingHospitals.length > 0) {
+              const isPlural = fetchingHospitals.length > 1;
+              const detail = `${fetchingHospitals.join(' and ')} ${isPlural ? 'are' : 'is'} fetching latest model data.`;
+              setWorkflowState('Fetching Hospital Data', 'warn', Math.max(progress, 30), detail);
             } else if (globalReady) {
               setWorkflowState('Workflow Healthy', 'good', 100, 'Main, local, and global models are available.');
             } else if (mainReady) {
@@ -1560,12 +1742,20 @@
               document.getElementById('globalAcc').textContent = globalPct ? `${globalPct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
-              setTag('h1Tag', localModelH1 ? 'Updated' : 'Outdated', localModelH1);
-              setTag('h2Tag', localModelH2 ? 'Updated' : 'Outdated', localModelH2);
+              const h1TagText = !h1 ? 'Offline' : (localModelH1 ? 'Updated' : 'Fetching');
+              const h2TagText = !h2 ? 'Offline' : (localModelH2 ? 'Updated' : 'Fetching');
+              setTag('h1Tag', h1TagText, localModelH1);
+              setTag('h2Tag', h2TagText, localModelH2);
               setTag('globalTag', globalReady ? 'Aggregated' : 'Pending', globalReady);
 
               setState('h1State', h1 ? 'online' : 'offline', h1 ? 'online' : 'wait');
               setState('h2State', h2 ? 'online' : 'offline', h2 ? 'online' : 'wait');
+
+              const registryFromStatus = status.models?.registry || cachedRegistry;
+              renderModelVersionChips(registryFromStatus || null);
+              if (status.models?.registry) {
+                cachedRegistry = status.models.registry;
+              }
 
               latestModelMetrics = normalizeModelMetrics(status);
               const evaluationSignature = JSON.stringify(latestModelMetrics);
@@ -1615,9 +1805,6 @@
 
           async function runAction(action) {
             try {
-              if (action === 'evaluate') {
-                scrollToEvaluationPanel();
-              }
               isActionInFlight = true;
               setButtonsBusy(true);
               setWorkflowState('Workflow Processing', 'processing', 35, `${actionText(action)}...`, true);
@@ -1635,14 +1822,14 @@
                 throw new Error(body.detail || JSON.stringify(body));
               }
               writeLog(`${action.toUpperCase()} success: ${JSON.stringify(body)}`, 'success');
-              refreshStatus();
+              setWorkflowCompletionNotice(action);
             } catch (error) {
               setWorkflowState('Workflow Error', 'bad', 20, `Action failed while ${actionText(action).toLowerCase()}.`);
               writeLog(`${action.toUpperCase()} failed: ${error}`, 'error');
             } finally {
               isActionInFlight = false;
               setButtonsBusy(false);
-              refreshStatus();
+              await refreshStatus();
             }
           }
 
@@ -1654,9 +1841,102 @@
                 throw new Error(payload.detail || 'Failed loading model versions.');
               }
               cachedRegistry = payload.registry || null;
+              renderModelVersionChips(cachedRegistry);
               [1, 2, 3].forEach((slot) => populateVersionSelect(slot));
+              populateDeleteVersionSelect();
             } catch (error) {
               writeLog(`Version registry refresh failed: ${error}`, 'warn');
+            }
+          }
+
+          function populateDeleteVersionSelect() {
+            const family = document.getElementById('deleteFamily').value;
+            const versionSelect = document.getElementById('deleteVersion');
+            const versions = cachedRegistry?.[family]?.versions || [];
+            versionSelect.innerHTML = '';
+
+            versions.forEach((entry) => {
+              const option = document.createElement('option');
+              option.value = entry.version_name;
+              option.textContent = entry.version_name;
+              versionSelect.appendChild(option);
+            });
+
+            if (versions.length === 0) {
+              const option = document.createElement('option');
+              option.value = '';
+              option.textContent = 'No versions available';
+              versionSelect.appendChild(option);
+            }
+          }
+
+          function deleteEndpoint(scope) {
+            if (scope === 'version') return '/models/delete-version';
+            if (scope === 'family') return '/models/delete-family';
+            return '/models/delete-all';
+          }
+
+          function deleteConfirmMessage(scope, family, versionName) {
+            if (scope === 'version') {
+              return `Delete ${versionName || 'selected version'} from ${family}? This cannot be undone.`;
+            }
+            if (scope === 'family') {
+              return `Delete all versions in family ${family}? This cannot be undone.`;
+            }
+            return 'Delete ALL model files in main_server/app/models? This cannot be undone.';
+          }
+
+          async function runDeleteAction(scope) {
+            const family = document.getElementById('deleteFamily').value;
+            const versionName = document.getElementById('deleteVersion').value;
+
+            if (scope === 'version' && !versionName) {
+              writeLog('No model version selected for delete.', 'warn');
+              return;
+            }
+
+            const confirmed = window.confirm(deleteConfirmMessage(scope, family, versionName));
+            if (!confirmed) {
+              writeLog('Delete action cancelled.', 'warn');
+              return;
+            }
+
+            const endpoint = deleteEndpoint(scope);
+            const payload = scope === 'version'
+              ? { model_family: family, version_name: versionName }
+              : scope === 'family'
+                ? { model_family: family }
+                : null;
+
+            try {
+              isActionInFlight = true;
+              setButtonsBusy(true);
+              setWorkflowState('Workflow Processing', 'processing', 35, 'Deleting model artifacts...', true);
+              writeLog(`Delete action started: ${scope}.`, 'info');
+
+              const request = { method: 'POST' };
+              if (payload) {
+                request.headers = { 'Content-Type': 'application/json' };
+                request.body = JSON.stringify(payload);
+              }
+
+              const response = await fetch(endpoint, request);
+              const body = await response.json();
+              if (!response.ok) {
+                throw new Error(body.detail || JSON.stringify(body));
+              }
+
+              const completionAction = scope === 'version' ? 'delete-version' : scope === 'family' ? 'delete-family' : 'delete-all';
+              setWorkflowCompletionNotice(completionAction);
+              writeLog(`DELETE ${scope.toUpperCase()} success: ${JSON.stringify(body)}`, 'success');
+              await refreshVersionRegistry();
+            } catch (error) {
+              setWorkflowState('Workflow Error', 'bad', 20, 'Delete operation failed.');
+              writeLog(`DELETE ${scope.toUpperCase()} failed: ${error}`, 'error');
+            } finally {
+              isActionInFlight = false;
+              setButtonsBusy(false);
+              await refreshStatus();
             }
           }
 
@@ -1703,14 +1983,15 @@
                 throw new Error(payload.detail || JSON.stringify(payload));
               }
               writeLog(`UPLOAD success: ${JSON.stringify(payload)}`, 'success');
+              setWorkflowCompletionNotice('upload-forward');
               input.value = '';
-              await refreshStatus();
               await refreshVersionRegistry();
             } catch (error) {
               writeLog(`UPLOAD failed: ${error}`, 'error');
             } finally {
               isActionInFlight = false;
               setButtonsBusy(false);
+              await refreshStatus();
             }
           }
 

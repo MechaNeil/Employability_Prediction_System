@@ -30,3 +30,12 @@ class VersionCompareItem(BaseModel):
 class VersionCompareRequest(BaseModel):
     test_dataset: str = Field(default="set1")
     items: list[VersionCompareItem]
+
+
+class DeleteModelVersionRequest(BaseModel):
+    model_family: str
+    version_name: str
+
+
+class DeleteModelFamilyRequest(BaseModel):
+    model_family: str

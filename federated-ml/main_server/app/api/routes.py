@@ -5,6 +5,8 @@ from fastapi.responses import HTMLResponse
 from main_server.app.controllers import federation_controller
 from main_server.app.core.config import MODELS_DIR
 from main_server.app.models.schemas import (
+    DeleteModelFamilyRequest,
+    DeleteModelVersionRequest,
     PredictRequest,
     RetrainTargetsRequest,
     TrainMainRequest,
@@ -55,6 +57,45 @@ def aggregate() -> dict[str, object]:
 def deploy() -> dict[str, str]:
     try:
         return federation_controller.deploy_model()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/models/clean-start")
+def clean_start_models() -> dict[str, object]:
+    try:
+        return federation_controller.clean_start_models()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/models/delete-version")
+def delete_model_version(payload: DeleteModelVersionRequest) -> dict[str, object]:
+    try:
+        return federation_controller.delete_models_version(
+            model_family=payload.model_family,
+            version_name=payload.version_name,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/models/delete-family")
+def delete_model_family(payload: DeleteModelFamilyRequest) -> dict[str, object]:
+    try:
+        return federation_controller.delete_models_family(model_family=payload.model_family)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/models/delete-all")
+def delete_all_models() -> dict[str, object]:
+    try:
+        return federation_controller.delete_models_all()
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

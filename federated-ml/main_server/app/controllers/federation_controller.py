@@ -16,6 +16,10 @@ from main_server.app.services.status import (
     trigger_status_refresh,
 )
 from main_server.app.services.training import train_main_model
+from main_server.app.services.model_registry import clear_model_artifacts
+from main_server.app.services.model_registry import delete_all_model_files
+from main_server.app.services.model_registry import delete_model_family
+from main_server.app.services.model_registry import delete_model_version
 from main_server.app.views.dashboard_view import get_dashboard_html
 
 
@@ -64,6 +68,30 @@ def predict_model(records: list[dict[str, float]]) -> dict[str, object]:
 
 def compare_versions(test_dataset: str, items: list[dict[str, str]]) -> dict[str, object]:
     return compare_named_versions(test_dataset=test_dataset, items=items)
+
+
+def clean_start_models() -> dict[str, object]:
+    result = clear_model_artifacts()
+    trigger_status_refresh(force=True)
+    return result
+
+
+def delete_models_version(model_family: str, version_name: str) -> dict[str, object]:
+    result = delete_model_version(model_family=model_family, version_name=version_name)
+    trigger_status_refresh(force=True)
+    return result
+
+
+def delete_models_family(model_family: str) -> dict[str, object]:
+    result = delete_model_family(model_family=model_family)
+    trigger_status_refresh(force=True)
+    return result
+
+
+def delete_models_all() -> dict[str, object]:
+    result = delete_all_model_files()
+    trigger_status_refresh(force=True)
+    return result
 
 
 def forward_uploaded_model_to_target(
