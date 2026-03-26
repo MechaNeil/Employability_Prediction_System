@@ -265,7 +265,6 @@ Main dashboard URL: http://localhost:8000/
 ### Commands
 
 ```bash
-cd federated-ml
 pip install -r requirements.txt
 
 python -m shared.data_split
