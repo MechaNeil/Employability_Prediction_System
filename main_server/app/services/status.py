@@ -89,6 +89,23 @@ def _service_health(url: str) -> dict[str, object]:
         }
 
 
+def _service_model_version(url: str) -> dict[str, object]:
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        payload = response.json()
+        return {
+            "ok": True,
+            "payload": payload,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": False,
+            "payload": None,
+            "error": str(exc),
+        }
+
+
 def get_model_versions() -> dict[str, object]:
     return {
         "base_model": _model_info(BASE_MODEL_PATH),
@@ -258,11 +275,29 @@ def get_system_status() -> dict[str, object]:
     versions = get_model_versions()
     trigger_status_refresh(force=False)
 
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    model_version_urls = {
+        "employability_1": EMPLOYABILITY_1_HEALTH_URL.replace("/health", "/model-version"),
+        "employability_2": EMPLOYABILITY_2_HEALTH_URL.replace("/health", "/model-version"),
+    }
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
         employability_1_future = executor.submit(_service_health, EMPLOYABILITY_1_HEALTH_URL)
         employability_2_future = executor.submit(_service_health, EMPLOYABILITY_2_HEALTH_URL)
+        employability_1_model_future = executor.submit(_service_model_version, model_version_urls["employability_1"])
+        employability_2_model_future = executor.submit(_service_model_version, model_version_urls["employability_2"])
         employability_1 = employability_1_future.result()
         employability_2 = employability_2_future.result()
+        employability_1_model = employability_1_model_future.result()
+        employability_2_model = employability_2_model_future.result()
+
+    employability_1_has_model = isinstance(
+        (employability_1_model.get("payload") or {}).get("active_model"),
+        dict,
+    )
+    employability_2_has_model = isinstance(
+        (employability_2_model.get("payload") or {}).get("active_model"),
+        dict,
+    )
 
     with _CACHE_LOCK:
         metrics = dict(_STATUS_CACHE.get("metrics") or {})
@@ -274,8 +309,16 @@ def get_system_status() -> dict[str, object]:
     return {
         "timestamp_utc": datetime.now(tz=timezone.utc).isoformat(),
         "employabilitys": {
-            "employability_1": employability_1,
-            "employability_2": employability_2,
+            "employability_1": {
+                **employability_1,
+                "model_version": employability_1_model,
+                "has_model_file": employability_1_has_model,
+            },
+            "employability_2": {
+                **employability_2,
+                "model_version": employability_2_model,
+                "has_model_file": employability_2_has_model,
+            },
         },
         "models": versions,
         "metrics": metrics,

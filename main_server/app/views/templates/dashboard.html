@@ -1032,7 +1032,7 @@
                   <strong id="workflowProgressText">0%</strong>
                 </div>
                 <div class="timeline">
-                  <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model Trained</div><div class="step-sub" id="stepMainSub">Main model status <span id="stepMainState" class="status-inline pending">pending</span></div></div>
+                  <div id="stepMain" class="step pending"><div class="step-title"><i class="fa-solid fa-brain"></i>Main Model</div><div class="step-sub" id="stepMainSub">Main model status <span id="stepMainState" class="status-inline pending">pending</span></div></div>
                   <div id="stepDeploy" class="step pending"><div class="step-title"><i class="fa-solid fa-paper-plane"></i>Model Deployment</div><div class="step-sub" id="stepDeploySub">Deployment status <span id="stepDeployState" class="status-inline pending">pending</span></div></div>
                   <div id="stepH1" class="step pending"><div class="step-title"><i class="fa-solid fa-user-graduate"></i>Employability-1 Model</div><div class="step-sub" id="stepH1Sub">Employability-1 connection <span id="stepH1State" class="status-inline pending">pending</span></div></div>
                   <div id="stepH2" class="step pending"><div class="step-title"><i class="fa-solid fa-briefcase"></i>Employability-2 Model</div><div class="step-sub" id="stepH2Sub">Employability-2 connection <span id="stepH2State" class="status-inline pending">pending</span></div></div>
@@ -1677,33 +1677,43 @@
           function updateWorkflowFromStatus(status) {
             const h1 = status.employabilitys?.employability_1?.online === true;
             const h2 = status.employabilitys?.employability_2?.online === true;
+            const hasModelFileH1 = status.employabilitys?.employability_1?.has_model_file === true;
+            const hasModelFileH2 = status.employabilitys?.employability_2?.has_model_file === true;
             const mainReady = status.models?.base_model?.exists === true;
             const cmp = status.comparison || {};
             const globalReady = cmp.aggregated_main !== null && cmp.aggregated_main !== undefined;
             const localModelH1 = cmp.employability_1 !== null && cmp.employability_1 !== undefined;
             const localModelH2 = cmp.employability_2 !== null && cmp.employability_2 !== undefined;
 
+            const noModelEmployabilitys = [];
+            if (h1 && !hasModelFileH1) noModelEmployabilitys.push('Employability-1');
+            if (h2 && !hasModelFileH2) noModelEmployabilitys.push('Employability-2');
+
             const waitingEmployabilitys = [];
-            if (h1 && !localModelH1) waitingEmployabilitys.push('Employability-1');
-            if (h2 && !localModelH2) waitingEmployabilitys.push('Employability-2');
+            if (h1 && hasModelFileH1 && !localModelH1) waitingEmployabilitys.push('Employability-1');
+            if (h2 && hasModelFileH2 && !localModelH2) waitingEmployabilitys.push('Employability-2');
 
             setStep('stepMain', mainReady ? 'ok' : 'pending');
             setStep('stepDeploy', mainReady && h1 && h2 ? 'ok' : (mainReady ? 'pending' : 'bad'));
-            setStep('stepH1', h1 ? (localModelH1 ? 'ok' : 'pending') : 'bad');
-            setStep('stepH2', h2 ? (localModelH2 ? 'ok' : 'pending') : 'bad');
+            setStep('stepH1', h1 ? (hasModelFileH1 ? (localModelH1 ? 'ok' : 'pending') : 'bad') : 'bad');
+            setStep('stepH2', h2 ? (hasModelFileH2 ? (localModelH2 ? 'ok' : 'pending') : 'bad') : 'bad');
             setStep('stepGlobal', globalReady ? 'ok' : 'pending');
 
             setStepStatus('stepMainState', mainReady ? 'ready' : 'pending', mainReady ? 'ready' : 'pending');
             setStepStatus('stepDeployState', mainReady && h1 && h2 ? 'ready' : 'pending', mainReady && h1 && h2 ? 'ready' : 'pending');
             setStepStatus(
               'stepH1State',
-              h1 ? (localModelH1 ? 'ready' : (mainReady ? 'waiting upload' : 'waiting base')) : 'offline',
-              h1 ? (localModelH1 ? 'ready' : 'pending') : 'offline'
+              h1
+                ? (hasModelFileH1 ? (localModelH1 ? 'ready' : (mainReady ? 'has model, not deployed' : 'waiting base')) : 'no model file')
+                : 'offline',
+              h1 ? (hasModelFileH1 ? (localModelH1 ? 'ready' : 'pending') : 'offline') : 'offline'
             );
             setStepStatus(
               'stepH2State',
-              h2 ? (localModelH2 ? 'ready' : (mainReady ? 'waiting upload' : 'waiting base')) : 'offline',
-              h2 ? (localModelH2 ? 'ready' : 'pending') : 'offline'
+              h2
+                ? (hasModelFileH2 ? (localModelH2 ? 'ready' : (mainReady ? 'has model, not deployed' : 'waiting base')) : 'no model file')
+                : 'offline',
+              h2 ? (hasModelFileH2 ? (localModelH2 ? 'ready' : 'pending') : 'offline') : 'offline'
             );
             setStepStatus('stepGlobalState', globalReady ? 'ready' : 'pending', globalReady ? 'ready' : 'pending');
 
@@ -1722,6 +1732,10 @@
               setWorkflowState('Offline Services', 'bad', progress, 'Both employabilitys are offline. Start employability services first.');
             } else if (!h1 || !h2) {
               setWorkflowState('Partial Connectivity', 'warn', progress, 'One employability is offline. Workflow is degraded.');
+            } else if (noModelEmployabilitys.length > 0) {
+              const isPlural = noModelEmployabilitys.length > 1;
+              const detail = `${noModelEmployabilitys.join(' and ')} ${isPlural ? 'have' : 'has'} no model file. Employability servers are waiting for main model push.`;
+              setWorkflowState('Waiting For Main Push', 'warn', Math.max(progress, 20), detail);
             } else if (waitingEmployabilitys.length > 0 && !mainReady) {
               const isPlural = waitingEmployabilitys.length > 1;
               const detail = `${waitingEmployabilitys.join(' and ')} ${isPlural ? 'are' : 'is'} waiting for base model training on main server.`;
@@ -1749,6 +1763,8 @@
                 const status = await fetch('/status').then((r) => r.json());
               const h1 = status.employabilitys?.employability_1?.online === true;
               const h2 = status.employabilitys?.employability_2?.online === true;
+              const hasModelFileH1 = status.employabilitys?.employability_1?.has_model_file === true;
+              const hasModelFileH2 = status.employabilitys?.employability_2?.has_model_file === true;
               const mainReady = status.models?.base_model?.exists === true;
               const cmp = status.comparison || {};
               const globalReady = cmp.aggregated_main !== null && cmp.aggregated_main !== undefined;
@@ -1764,8 +1780,8 @@
               document.getElementById('h2Acc').textContent = h2Pct ? `${h2Pct}%` : '-';
 
               setTag('mainTag', mainReady ? 'Trained' : 'Pending', mainReady);
-              const h1TagText = !h1 ? 'Offline' : (localModelH1 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
-              const h2TagText = !h2 ? 'Offline' : (localModelH2 ? 'Updated' : (mainReady ? 'Not Uploaded' : 'Waiting Base'));
+              const h1TagText = !h1 ? 'Offline' : (!hasModelFileH1 ? 'No model file' : (localModelH1 ? 'Updated' : (mainReady ? 'Has model, not deployed' : 'Waiting Base')));
+              const h2TagText = !h2 ? 'Offline' : (!hasModelFileH2 ? 'No model file' : (localModelH2 ? 'Updated' : (mainReady ? 'Has model, not deployed' : 'Waiting Base')));
               setTag('h1Tag', h1TagText, localModelH1);
               setTag('h2Tag', h2TagText, localModelH2);
 
