@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "77223ead-92b2-4196-9689-932771d53d64",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\candidate.json",
+  "output": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.html",
+  "specification": {
+    "sha256": "0f50813e7583df6d58a34565b20b3b004daa3c3f56d431da0f086f9a99b88bc5",
+    "bytes": 6699
+  },
+  "artifact": {
+    "sha256": "29f3c3d5cdd7330a83528b929c8be60c5dcda25a917834a81678a51a4da3a4af",
+    "bytes": 828657
+  }
+}

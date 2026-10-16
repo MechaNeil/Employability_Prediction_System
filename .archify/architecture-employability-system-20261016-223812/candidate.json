@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Employability Prediction System",
+    "output": ".archify/architecture-employability-system-20261016-223812/employability-system.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/MechaNeil/Employability_Prediction_System",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "11f4e14ce8b7c6f3e275d9b3570b11496f861887"
+    }
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Client",
+      "sublabel": "Browser or API caller",
+      "pos": [40, 300],
+      "size": [150, 64],
+      "sources": [
+        { "path": "main_server/app/api/routes.py", "line": 1, "end_line": 18, "label": "HTTP routes" }
+      ]
+    },
+    {
+      "id": "main_api",
+      "type": "backend",
+      "label": "Main FastAPI",
+      "sublabel": "main_server :8000",
+      "tag": "HTTP entrypoint",
+      "pos": [260, 300],
+      "size": [190, 72],
+      "sources": [
+        { "path": "main_server/app/main.py", "line": 1, "end_line": 13, "label": "App registration" },
+        { "path": "main_server/app/api/routes.py", "line": 19, "end_line": 182, "label": "API endpoints" }
+      ]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "Federation Controller",
+      "sublabel": "request coordination",
+      "pos": [510, 300],
+      "size": [210, 72],
+      "sources": [
+        { "path": "main_server/app/controllers/federation_controller.py", "line": 1, "end_line": 83, "label": "Controller facade" }
+      ]
+    },
+    {
+      "id": "ml_services",
+      "type": "backend",
+      "label": "ML Services",
+      "sublabel": "train, aggregate, evaluate, infer",
+      "tag": "main server runtime",
+      "pos": [780, 300],
+      "size": [230, 76],
+      "sources": [
+        { "path": "main_server/app/services/training.py", "line": 1, "end_line": 41, "label": "Training" },
+        { "path": "main_server/app/services/aggregation.py", "line": 1, "end_line": 46, "label": "Aggregation" },
+        { "path": "main_server/app/services/inference.py", "line": 1, "end_line": 46, "label": "Inference" }
+      ]
+    },
+    {
+      "id": "model_registry",
+      "type": "database",
+      "label": "Model Registry",
+      "sublabel": "versions + active artifacts",
+      "pos": [780, 130],
+      "size": [230, 72],
+      "sources": [
+        { "path": "main_server/app/services/model_registry.py", "line": 1, "end_line": 45, "label": "Registry service" },
+        { "path": "main_server/app/models/registry.json", "label": "Registry state" }
+      ]
+    },
+    {
+      "id": "training_data",
+      "type": "database",
+      "label": "Training Datasets",
+      "sublabel": "dataset/Set-1..Set-3 CSV files",
+      "pos": [780, 510],
+      "size": [230, 72],
+      "sources": [
+        { "path": "main_server/app/services/training.py", "line": 14, "end_line": 22, "label": "Dataset input" },
+        { "path": "main_server/app/services/aggregation.py", "line": 31, "end_line": 35, "label": "Aggregation input" }
+      ]
+    },
+    {
+      "id": "employability_1",
+      "type": "backend",
+      "label": "Employability 1",
+      "sublabel": "FastAPI :8001",
+      "tag": "Docker container",
+      "pos": [1060, 170],
+      "size": [190, 72],
+      "sources": [
+        { "path": "employability_1/Dockerfile", "line": 1, "end_line": 11, "label": "Container runtime" },
+        { "path": "employability_1/app/api/routes.py", "line": 1, "end_line": 104, "label": "Remote API" }
+      ]
+    },
+    {
+      "id": "employability_2",
+      "type": "backend",
+      "label": "Employability 2",
+      "sublabel": "FastAPI :8002",
+      "tag": "Docker container",
+      "pos": [1060, 430],
+      "size": [190, 72],
+      "sources": [
+        { "path": "employability_2/Dockerfile", "line": 1, "end_line": 11, "label": "Container runtime" },
+        { "path": "employability_2/app/api/routes.py", "line": 1, "end_line": 104, "label": "Remote API" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Main server runtime",
+      "wraps": ["main_api", "controller", "ml_services", "model_registry", "training_data"]
+    },
+    {
+      "kind": "region",
+      "label": "Dockerized employability services",
+      "wraps": ["employability_1", "employability_2"]
+    }
+  ],
+  "connections": [
+    { "id": "client-to-api", "from": "client", "to": "main_api", "label": "HTTP request", "variant": "emphasis" },
+    { "id": "api-to-controller", "from": "main_api", "to": "controller", "label": "dispatch endpoint" },
+    { "id": "controller-to-services", "from": "controller", "to": "ml_services", "label": "train / aggregate / predict" },
+    { "id": "services-to-registry", "from": "ml_services", "to": "model_registry", "label": "read and register versions", "fromSide": "top", "toSide": "bottom" },
+    { "id": "services-to-data", "from": "ml_services", "to": "training_data", "label": "read CSV datasets", "fromSide": "bottom", "toSide": "top" },
+    { "id": "services-to-employability-1", "from": "ml_services", "to": "employability_1", "label": "POST model upload", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "services-to-employability-2", "from": "ml_services", "to": "employability_2", "label": "POST model upload", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "employability-1-to-api", "from": "employability_1", "to": "main_api", "label": "upload active model", "variant": "dashed", "fromSide": "top", "toSide": "top" },
+    { "id": "employability-2-to-api", "from": "employability_2", "to": "main_api", "label": "upload active model", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Control plane",
+      "items": [
+        "FastAPI routes delegate through FederationController.",
+        "Training, aggregation, evaluation, and prediction run in the main server process."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Model state",
+      "items": [
+        "Active versions and joblib artifacts live under main_server/app/models.",
+        "Aggregation reads Set-1, Set-2, and Set-3 training CSVs."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Federation exchange",
+      "items": [
+        "Main server pushes the main model to ports 8001 and 8002.",
+        "Each employability service can upload its active model to /remote-models/upload."
+      ]
+    }
+  ]
+}

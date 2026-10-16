@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\candidate.json",
+    "sha256": "0f50813e7583df6d58a34565b20b3b004daa3c3f56d431da0f086f9a99b88bc5",
+    "bytes": 6699
+  },
+  "artifact": {
+    "path": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.html",
+    "sha256": "29f3c3d5cdd7330a83528b929c8be60c5dcda25a917834a81678a51a4da3a4af",
+    "bytes": 828657
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "Chrome or Chromium is unavailable. Set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome or Chromium executable and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.finalize.json",
+    "summaryReceipt": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\ASUS\\Documents\\GitHub\\Employability_Prediction_System\\.archify\\architecture-employability-system-20261016-223812\\employability-system.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-16T14:38:36.695Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2233
+}
