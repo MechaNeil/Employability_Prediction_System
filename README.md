@@ -82,7 +82,56 @@ federated-ml/
 └── requirements.txt
 ```
 
-## 3. Data Pipeline
+## 3. Module Responsibilities and Dependencies
+
+The repository is organized around one central coordinator and two employability
+services that train local models. The services exchange model artifacts, while
+the employability services keep their training data local.
+
+| Module                                                 | Responsibility                                                                                                   | Depends on                                                                        |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `main_server/app/main.py`                              | Application entry point                                                                                          | `main_server/app/api/routes.py`                                                   |
+| `main_server/app/api/routes.py`                        | HTTP API and request routing                                                                                     | Controllers, schemas, configuration, model registry                               |
+| `main_server/app/controllers/federation_controller.py` | Coordinates API operations for training, deployment, aggregation, inference, status, and model management        | Main-server services                                                              |
+| `main_server/app/services/orchestration.py`            | Runs cross-service workflows such as aggregation, retraining requests, deployment, and uploaded-model forwarding | Aggregation, evaluation, configuration, shared registry, employability registries |
+| `main_server/app/services/aggregation.py`              | Combines contributor models into a new main model                                                                | Model artifacts and training data                                                 |
+| `main_server/app/services/training.py`                 | Trains the central model                                                                                         | Dataset utilities and model registry                                              |
+| `main_server/app/services/evaluation.py`               | Evaluates the active central model                                                                               | Active model artifacts and datasets                                               |
+| `main_server/app/services/inference.py`                | Produces predictions from the active central model                                                               | Model registry and model artifacts                                                |
+| `main_server/app/services/status.py`                   | Reports model versions, metrics, and employability state                                                         | Model registry and evaluation data                                                |
+| `main_server/app/services/model_registry.py`           | Registers, activates, deletes, and summarizes central and remote model versions                                  | `shared/model_registry.py`                                                        |
+| `main_server/app/models/schemas.py`                    | Defines request payloads for training, prediction, retraining, and version operations                            | Pydantic/FastAPI                                                                  |
+| `employability_1/app` and `employability_2/app`        | Independent local training services with matching API/controller/service layers                                  | Local datasets, local registries, and deployment services                         |
+| `shared/`                                              | Shared constants, dataset splitting, and model-version primitives                                                | Used by central and local services                                                |
+
+### Dependency Flow
+
+```text
+main_server/app/main.py
+  -> main_server/app/api/routes.py
+    -> main_server/app/controllers/federation_controller.py
+      -> main_server/app/services/
+         -> shared/model_registry.py
+
+employability_1/app/api/routes.py
+  -> employability_1/app/controllers/federation_controller.py
+    -> local training, evaluation, deployment, status, and registry services
+      -> main_server remote-model endpoints
+
+employability_2/app/api/routes.py
+  -> employability_2/app/controllers/federation_controller.py
+    -> local training, evaluation, deployment, status, and registry services
+      -> main_server remote-model endpoints
+```
+
+The normal reading order is `main_server/app/main.py`,
+`main_server/app/api/routes.py`, the main federation controller,
+`main_server/app/services/orchestration.py`, and the two model-registry layers.
+Then compare the parallel federation controllers in `employability_1` and
+`employability_2` to see how local training returns model artifacts to the
+central server.
+
+## 4. Data Pipeline
 
 Source dataset: Student-Employability-Datasets.csv
 
@@ -104,11 +153,11 @@ Source dataset: Student-Employability-Datasets.csv
 Current split summary from the dataset in this repository:
 
 | Dataset | Training | Testing | Total |
-|---|---:|---:|---:|
-| Set-1 | 1000 | 250 | 1250 |
-| Set-2 | 800 | 200 | 1000 |
-| Set-3 | 586 | 146 | 732 |
-| Total | 2386 | 596 | 2982 |
+| ------- | -------: | ------: | ----: |
+| Set-1   |     1000 |     250 |  1250 |
+| Set-2   |      800 |     200 |  1000 |
+| Set-3   |      586 |     146 |   732 |
+| Total   |     2386 |     596 |  2982 |
 
 Generated files:
 
@@ -125,7 +174,7 @@ Command:
 python -m shared.data_split
 ```
 
-## 4. Model Lifecycle (Current Architecture)
+## 5. Model Lifecycle (Current Architecture)
 
 ### 4.1 Main Model Training
 
@@ -176,7 +225,7 @@ Each employability retrains locally using /train or /retrain:
 - Supports all test sets combined or a selected set
 - Metrics: Accuracy, Precision, Recall, F1
 
-## 5. Runtime Orchestration Flow
+## 6. Runtime Orchestration Flow
 
 ### Recommended Sequence
 
@@ -199,7 +248,7 @@ Each employability retrains locally using /train or /retrain:
   - main_server
   - localhost
 
-## 6. API Reference
+## 7. API Reference
 
 ### Main Server (port 8000)
 
@@ -233,7 +282,7 @@ Each employability retrains locally using /train or /retrain:
 - POST /model/delete-version -> Delete selected local version (local family only)
 - POST /model/delete-family -> Delete local family (local family only)
 
-## 7. Dashboard Functionality
+## 8. Dashboard Functionality
 
 Main dashboard URL: http://localhost:8000/
 
@@ -323,4 +372,3 @@ curl http://localhost:8000/evaluate
 3. Add integration tests for full cycle and failure paths.
 4. Add structured observability (metrics + traces + logs).
 5. Add CI checks for API contract and workflow regression.
-
